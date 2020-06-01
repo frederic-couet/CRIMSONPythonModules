@@ -21,4 +21,5 @@ def getSolverSetupManager():
 
 def reloadAll():
     for module_name in __all__:
+        # [AJM] this line makes this module only work on Python 2, because in Python 2 exec no longer effects the global scope.
         exec ('{0} = reload({0})'.format(module_name))
