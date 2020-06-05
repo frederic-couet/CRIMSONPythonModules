@@ -186,41 +186,6 @@ class SolverStudy(object):
         return solutions
 
 
-    # def runParticleTracking(self):
-    #     simulationDirectory = QtGui.QFileDialog.getExistingDirectory(None, 'Set simulation directory')
-
-    #     if not simulationDirectory:
-    #         return
-
-    #     Utils.logInformation("REACHED 0")
-    #     self.setNProcsCaseFolderToReadForParticleSim(simulationDirectory)
-    #     self._runParticleTracking(simulationDirectory)
-
-
-    # def _runParticleTracking(self, trackingDirectory): #, numberOfProcessors):
-    #     if platform.system() == "Windows":  # todo add linux case, below - in particular to avoid calling cmd.exe
-    #         particleTrackingBatchFileName = "all_particles_run_windows.bat"
-    #         particleTrackingScriptDirectory = os.path.normpath(os.path.join(os.path.realpath(__file__),
-    #                                                              os.pardir, "particle_tracking",))
-
-    #         particleTrackingBatchFileFullPath = os.path.join(particleTrackingScriptDirectory, particleTrackingBatchFileName)
-
-    #         Utils.logInformation('Running particle tracking from ' + particleTrackingBatchFileFullPath)
-    #         Utils.logInformation('Using working directory ' + trackingDirectory)
-
-    #         # In case the paths both contain spaces, this pattern of double quotes is required
-    #         # so that the Windows shell understands what we are asking it to do.
-    #         #
-    #         # Specifically, "" to start and end the whole argument set, and " around each path.
-    #         command = "powershell.exe " + "\"\"" + particleTrackingBatchFileFullPath + "\" \'" + trackingDirectory + "\'\""
-    #         # command = ["powershell.exe", particleTrackingBatchFileFullPath, trackingDirectory]
-
-    #         # Launch in a new console so e.g. ctrl+c on the flowsolver console doesn't terminate CRIMSON
-    #         subprocess.Popen(command,
-    #                          cwd=trackingDirectory,
-    #                          creationflags=subprocess.CREATE_NEW_CONSOLE)
-
-
     def _checkSystemForFlowsolver(self):
         invalid_hostname = True if re.search(r'[^a-zA-Z0-9\-\.]', platform.node()) else False
 
