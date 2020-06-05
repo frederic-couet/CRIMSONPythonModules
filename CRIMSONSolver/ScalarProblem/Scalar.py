@@ -13,6 +13,7 @@ class Scalar(PropertyStorage):
     '''
     def __init__(self):
         PropertyStorage.__init__(self)
+        # Where self.BCs[<faceIdentifier>] = <Instance of ScalarBC>
         self.BCs = {}
         self.properties = [
             {

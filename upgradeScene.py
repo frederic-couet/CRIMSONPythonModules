@@ -155,6 +155,7 @@ def createMeshFaceInfo(tempDir, filename, allFiles, indexXML):
             meshNode.append(ET.Element('additionalFile', {'file': baseName + '.faceinfo'}))
 
 
+# this appears to be for opening files
 def upgradeScene(filename):
     tempdir = tempfile.mkdtemp()
     try:
@@ -162,9 +163,9 @@ def upgradeScene(filename):
         zipfile.ZipFile(filename, mode='r').extractall(tempdir)
 
         indexFileName = os.path.join(tempdir, 'index.xml')
-        with open(indexFileName, 'rt') as f:
+        with open(indexFileName, 'rt') as indexFile:
             indexXMLContents = ''
-            for i, l in enumerate(f):
+            for i, l in enumerate(indexFile):
                 indexXMLContents += l
                 if i == 0:
                     indexXMLContents += '<v>'
@@ -181,11 +182,15 @@ def upgradeScene(filename):
                 derivedNodes.setdefault(node[0].get('UID'), []).append(node)
 
         newSourceNodeUIDs = {}
-        for i, sourceNodeUID in enumerate(derivedNodes.keys()):
-            newUID = "OBJECT_{0}".format(i)
+        for keyIndex, sourceNodeUID in enumerate(derivedNodes.keys()):
+            # where newUID is in the form OBJECT_0, OBJECT_1, OBJECT_2, ...
+            newUID = "OBJECT_{0}".format(keyIndex)
             newElement = ET.Element('node', {"UID": newUID})
             newElement.append(ET.Element('properties', {'file': newUID}))
             newElement.append(ET.Element('source', {'UID': sourceNodeUID}))
+
+            # I think this is an intermediate file that doesn't make it into the final zip file,
+            # it looks like it's ignored because it has no extension
             with open(os.path.join(tempdir, newUID), 'wt') as f:
                 f.write('''<?xml version="1.0" ?>
 <Version Writer="T:\MITK\Modules\SceneSerializationBase\src\mitkPropertyListSerializer.cpp" Revision="$Revision: 17055 $" FileVersion="1" />
@@ -246,8 +251,8 @@ def upgradeScene(filename):
             if result is not None:
                 writeUpgradedObject(result, tempdir, savedfilename, newExt, indexXML)
 
-        with open(indexFileName, 'wt') as f:
-            f.write(ET.tostring(indexXML).replace('<v>', '').replace('</v>', ''))
+        with open(indexFileName, 'wt') as indexFile:
+            indexFile.write(ET.tostring(indexXML).replace('<v>', '').replace('</v>', ''))
 
         newfilename = os.path.splitext(filename)[0] + '_new' + os.path.splitext(filename)[1]
         print("Saving to " + newfilename + "...")
@@ -264,6 +269,12 @@ def upgradeScene(filename):
 try:
     from PythonQt import QtGui
 
+    # Is this unused? Note: The non-plural function *is* used.
+    # It doesn't seem very useful, the script sys.exits if it's given no command line arguments,
+    # seems like maybe this could be useful if it handled the zero command line options route.
+    #
+    # I guess in theory this function might be useful if this script was imported as a module, 
+    # it doesn't appear to be, though.
     def upgradeScenes():
         filenames = PythonQt.QtGui.QFileDialog.getOpenFileNames(None, "Select scenes to upgrade", "", "*.mitk")
         for filename in filenames:
