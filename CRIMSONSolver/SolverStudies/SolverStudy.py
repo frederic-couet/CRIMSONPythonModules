@@ -9,6 +9,7 @@ import ntpath
 import stat
 import platform
 import re
+import json
 
 from PythonQt import QtGui
 from PythonQt.CRIMSON import FaceType
@@ -84,18 +85,52 @@ class MaterialFaceInfo(object):
                 if self.vesselForestData is not None else (0, 0)
 
 
+class SolverSetupType(object):
+    FLUID_SIMULATION = 'fluid_simulation'
+    PARTICLE_SIMULATION = 'particle_simulation'
+
+
+def mkdirNoFailOnExist(path):
+    try:
+        os.mkdir(path)
+    except OSError:
+        pass
+
+def sanitizeFileNameForWindows(filename):
+    invalid_filename_characters='[ \t<>:\"\\\/\|?\*]'
+    return re.sub(invalid_filename_characters, '_', filename)
+
+
 class SolverStudy(object):
     def __init__(self):
         self.meshNodeUID = ""
         self.solverParametersNodeUID = ""
         self.boundaryConditionSetNodeUIDs = []
         self.materialNodeUIDs = []
+        self.particleBolusMeshNodeUID = ""
+        self.particleBinMeshNodeUIDs = []
 
     def getMeshNodeUID(self):
         return self.meshNodeUID
 
     def setMeshNodeUID(self, uid):
         self.meshNodeUID = uid
+
+    def getParticleBolusMeshNodeUID(self):
+        if 'particleBolusMeshNodeUID' not in self.__dict__:
+            self.particleBolusMeshNodeUID = ""  # Support for old scenes
+        return self.particleBolusMeshNodeUID
+
+    def setParticleBolusMeshNodeUID(self, uid):
+        self.particleBolusMeshNodeUID = uid
+
+    def getParticleBinMeshNodeUIDs(self):
+        if 'particleBinMeshNodeUIDs' not in self.__dict__:
+            self.particleBinMeshNodeUIDs = []  # Support for old scenes
+        return self.particleBinMeshNodeUIDs
+
+    def setParticleBinMeshNodeUIDs(self, uids):
+        self.particleBinMeshNodeUIDs = uids
 
     def getSolverParametersNodeUID(self):
         return self.solverParametersNodeUID
@@ -151,6 +186,41 @@ class SolverStudy(object):
         return solutions
 
 
+    # def runParticleTracking(self):
+    #     simulationDirectory = QtGui.QFileDialog.getExistingDirectory(None, 'Set simulation directory')
+
+    #     if not simulationDirectory:
+    #         return
+
+    #     Utils.logInformation("REACHED 0")
+    #     self.setNProcsCaseFolderToReadForParticleSim(simulationDirectory)
+    #     self._runParticleTracking(simulationDirectory)
+
+
+    # def _runParticleTracking(self, trackingDirectory): #, numberOfProcessors):
+    #     if platform.system() == "Windows":  # todo add linux case, below - in particular to avoid calling cmd.exe
+    #         particleTrackingBatchFileName = "all_particles_run_windows.bat"
+    #         particleTrackingScriptDirectory = os.path.normpath(os.path.join(os.path.realpath(__file__),
+    #                                                              os.pardir, "particle_tracking",))
+
+    #         particleTrackingBatchFileFullPath = os.path.join(particleTrackingScriptDirectory, particleTrackingBatchFileName)
+
+    #         Utils.logInformation('Running particle tracking from ' + particleTrackingBatchFileFullPath)
+    #         Utils.logInformation('Using working directory ' + trackingDirectory)
+
+    #         # In case the paths both contain spaces, this pattern of double quotes is required
+    #         # so that the Windows shell understands what we are asking it to do.
+    #         #
+    #         # Specifically, "" to start and end the whole argument set, and " around each path.
+    #         command = "powershell.exe " + "\"\"" + particleTrackingBatchFileFullPath + "\" \'" + trackingDirectory + "\'\""
+    #         # command = ["powershell.exe", particleTrackingBatchFileFullPath, trackingDirectory]
+
+    #         # Launch in a new console so e.g. ctrl+c on the flowsolver console doesn't terminate CRIMSON
+    #         subprocess.Popen(command,
+    #                          cwd=trackingDirectory,
+    #                          creationflags=subprocess.CREATE_NEW_CONSOLE)
+
+
     def _checkSystemForFlowsolver(self):
         invalid_hostname = True if re.search(r'[^a-zA-Z0-9\-\.]', platform.node()) else False
 
@@ -195,13 +265,77 @@ class SolverStudy(object):
                              cwd=flowsolverDirectory,
                              creationflags=subprocess.CREATE_NEW_CONSOLE)
 
+    def _writeMesh(self, meshData, fileList):
+        with Timer('Written coordinates'):
+            self._writeNodeCoordinates(meshData, fileList)
+        with Timer('Written connectivity'):
+            self._writeConnectivity(meshData, fileList)
+        with Timer('Written adjacency'):
+            self._writeAdjacency(meshData, fileList)
 
     # Called from Modules\PythonSolverSetupService\src\PythonSolverStudyData.cpp
-    #                      ~line 297: _pyStudyObject.call("writeSolverSetup",...
+    #                      _pyStudyObject.call("writeSolverSetup",...
     def writeSolverSetup(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
                          materials, vesselPathNames, solutionStorage):
-
         outputDir = QtGui.QFileDialog.getExistingDirectory(None, 'Select output folder')
+
+        if not outputDir:
+            return
+
+        setupType = SolverSetupType.FLUID_SIMULATION
+        self._writeSolverSetupWithDirectory(vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
+                         materials, vesselPathNames, solutionStorage, outputDir)
+
+    # Writes the fluid simulation folder, too.
+    def writeParticleSetup(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
+                         materials, vesselPathNames, solutionStorage, bolusMeshData, binMeshDataList):
+        outputDir_particles = QtGui.QFileDialog.getExistingDirectory(None, 'Select output folder')
+
+        if not outputDir_particles:
+            return
+
+        setupTasks = []
+        setupTasks.append({'type': SolverSetupType.FLUID_SIMULATION, 'subdirectory': 'fluid_sim', 'meshData': meshData})
+        setupTasks.append({'type': SolverSetupType.PARTICLE_SIMULATION, 'subdirectory': 'particle_bolus', 'meshData': bolusMeshData})
+        
+        binNames = []
+
+        for index, binMesh in enumerate(binMeshDataList):
+            binName = sanitizeFileNameForWindows(binMesh.getDataNodeName())
+            binNames.append('particle_bin_' + binName)
+            subdirectory_name = "particle_bin_" + binName
+            setupTasks.append({'type': SolverSetupType.PARTICLE_SIMULATION, 'subdirectory': subdirectory_name, 'meshData': binMesh})
+
+        for task in setupTasks:
+            outputDir = os.path.join(outputDir_particles, task['subdirectory'])
+            mkdirNoFailOnExist(outputDir)
+            
+            if task['type'] == SolverSetupType.FLUID_SIMULATION:
+                self._writeSolverSetupWithDirectory(vesselForestData, solidModelData, task['meshData'], solverParameters, boundaryConditions,
+                                               materials, vesselPathNames, solutionStorage, outputDir)
+            elif task['type'] == SolverSetupType.PARTICLE_SIMULATION:
+                
+                presolverDir = os.path.join(outputDir, 'presolver')
+                mkdirNoFailOnExist(presolverDir)
+
+                try:
+                    fileList = FileList(outputDir)
+                    self._writeMesh(task['meshData'], fileList)
+                except Exception as e:
+                    Utils.logError(str(e))
+                    raise
+                finally:
+                    fileList.close()
+
+            else:
+                Utils.logError("Unknown task type in SolverStudy.py.")
+                return
+
+        self._writeParticleConfigJson(solverParameters, outputDir_particles, binNames)
+
+
+    def _writeSolverSetupWithDirectory(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
+                         materials, vesselPathNames, solutionStorage, outputDir):
 
         if not outputDir:
             return
@@ -231,12 +365,8 @@ class SolverStudy(object):
             with Timer('Written nbc and ebc files'):
                 faceIndicesInAllExteriorFaces = self._writeNbcEbc(solidModelData, meshData, faceIndicesAndFileNames,
                                                                   fileList)
-            with Timer('Written coordinates'):
-                self._writeNodeCoordinates(meshData, fileList)
-            with Timer('Written connectivity'):
-                self._writeConnectivity(meshData, fileList)
-            with Timer('Written adjacency'):
-                self._writeAdjacency(meshData, fileList)
+            self._writeMesh(meshData, fileList)
+
             with Timer('Written boundary conditions'):
                 self._writeBoundaryConditions(vesselForestData, solidModelData, meshData, boundaryConditions,
                                               materials, faceIndicesAndFileNames, solverInpData, fileList,
@@ -434,6 +564,99 @@ class SolverStudy(object):
         # Write all_eterior_faces.ebc
         return self._writeEbc(meshData, allFaceIdentifiers,
                               fileList[os.path.join('presolver', 'all_exterior_faces.ebc')])
+
+
+    def _getNumberOfProcessorsUsedInFluidSim(self, simulation_directory):
+        directoryContents = os.listdir(simulation_directory)
+        procsCaseFolders = [item for item in directoryContents if '-procs-case' in item]
+        if len(procsCaseFolders) != 1:
+            errorMessage = "ERROR: exactly one fluid simulation case (N-procs-case) folder in the fluid_sim directory is required."
+            print errorMessage
+            raise RuntimeError(errorMessage)
+
+        procsCaseFolder = procsCaseFolders[0]
+        firstDashLocation = procsCaseFolder.find('-')
+        numberOfFluidSimProcessors = int(procsCaseFolder[0:firstDashLocation])
+
+        return numberOfFluidSimProcessors
+
+
+    def _getParticleBinConfig(self, binName, binStartTime, binEndTime):
+        binConfigTemplate = dict()
+        binConfigTemplate["bin name"] = binName
+        binConfigTemplate["bin data"] = u"plap"
+        binConfigTemplate["bin time intervals"] = list()
+        binConfigTemplate["bin time intervals"].append({"start": binStartTime, "end": binEndTime})
+        binConfigTemplate["bin file names"] = list()
+        binConfigTemplate["bin file names"].append(binName + u".vtu")
+
+        return binConfigTemplate
+
+
+    def setNProcsCaseFolderToReadForParticleSim(self, outputDir_particles):
+        try:
+            fileList_particleParentDir = FileList(outputDir_particles)
+            particleConfigJsonFile = fileList_particleParentDir['particle_config.json', 'rb']
+
+            particleConfig = json.load(particleConfigJsonFile)
+            fluidSimFolderPath = outputDir_particles + os.sep + 'fluid_sim'
+            particleConfig["simulation setup"]["fluid sim"]["n-procs-case n value"] = "{}".format(
+                                              self._getNumberOfProcessorsUsedInFluidSim(fluidSimFolderPath)
+                                              )
+        finally:
+            fileList_particleParentDir.close()
+        # Now re-open the json file in write mode, and re-write the json
+        try:
+            fileList_particleParentDir_out = FileList(outputDir_particles)
+            particleConfigJsonFile_out = fileList_particleParentDir_out['particle_config.json', 'wb']
+            json.dump(particleConfig, particleConfigJsonFile_out)
+        finally:
+            fileList_particleParentDir.close()
+
+
+    def _writeParticleConfigJson(self, solverParameters, outputDir_particles, binNames):
+        try:
+            fileList_particleParentDir = FileList(outputDir_particles)
+            
+            particleConfigJsonFile = fileList_particleParentDir['particle_config.json', 'wb']
+
+            props = solverParameters.getProperties()
+
+            particleConfig = dict()
+            particleConfig["data file base name"] = props["Particle simulation nametag"]
+            particleConfig["input data start timestep"] = props["Start at fluid problem timestep"]
+            particleConfig["input data end timestep"] = props["Finish at fluid problem timestep"]
+            particleConfig["timesteps between restarts in input data"] = props["Number of time steps between restarts"]
+            particleConfig["real time between restarts in input data"] = props["Number of time steps between restarts"] * props["Time step size"]
+            particleConfig["tracking simulation starting timestep"] = props["Start at fluid problem timestep"]
+            particleConfig["number of cycles to track for"] = props["Repeats"]
+            particleConfig["wall has displacement field"] = False
+            particleConfig["steps between repartitioning particles and writing output"] = 20
+            particleConfig["real time through cardiac cycle when simulation starts"] = 0.0
+            particleConfig["real time of first systole start"] = 0.0
+            particleConfig["real time of first systole end"] = 1.0
+            particleConfig["cardiac cycle length"] = 1.0
+            particleConfig["maximum particle reinjections"] = props["Maximum reinjections"]
+            particleConfig["tracking steps between each reinjection"] = int(props["Reinject bolus every"] / props["Time step size"])
+            particleConfig["steps before first reinjection"] = int(props["Initial injection time"] / props["Time step size"])
+
+            particleConfig["simulation setup"] = dict()
+            particleConfig["simulation setup"]["data root"] = outputDir_particles
+            particleConfig["simulation setup"]["number of processors to use"] = "{}".format(props["Number of processors to use"])
+            particleConfig["simulation setup"]["fluid sim"] = dict()
+
+            particleConfig["simulation setup"]["fluid sim"]["n-procs-case n value"] = "SET_AT_RUNTIME"
+
+            particleConfig["space time bins"] = list()
+
+            for binName in binNames:
+                particleConfig["space time bins"].append(self._getParticleBinConfig(binName, 0.0, particleConfig["cardiac cycle length"]))
+
+            json.dump(particleConfig, particleConfigJsonFile)
+
+        finally:
+            fileList_particleParentDir.close()
+
 
     def _writeSolverSetup(self, solverInpData, fileList):
         solverInpFile = fileList['solver.inp', 'wb']
