@@ -88,4 +88,53 @@ class SolverParameters3D(PropertyStorage):
                     }
                 ]
             },
+            {
+                "Lagrangian particle tracking parameters":
+                [
+                    {
+                        "Particle simulation nametag": u"lagrangian_particles"
+                    },
+                    {
+                        "Number of processors to use": 1,
+                        "attributes": {"minimum": 1}
+                    },
+                    {
+                        "Output particle solution every": 1,
+                        "attributes": {"minimum": 1, "suffix": " fluid restarts"}
+                    },
+                    {
+                        "Portion of fluid solution to use":
+                        [
+                            {
+                                "Start at fluid problem timestep": 0,
+                                "attributes": {"minimum": 0}
+                            },
+                            {
+                                "Finish at fluid problem timestep": 200
+                            },
+                            {
+                                "Repeats": 3,
+                                "attributes": {"minimum": 1}
+                            }
+                        ]
+                    },
+                    {
+                        "Particle Reinjection":
+                        [
+                            {
+                                "Reinject bolus every": 0.5,
+                                "attributes": {"minimum": 0.00001, "suffix": " s"}
+                            },
+                            {
+                                "Initial injection time": 0.2,
+                                "attributes": {"minimum": 0.0, "suffix": " s"}
+                            },
+                            {
+                                "Maximum reinjections": 9999999,
+                                "attributes": {"minimum": 1, "maximum": 9999999}
+                            }
+                        ]
+                    },
+                ]
+            },
         ]
