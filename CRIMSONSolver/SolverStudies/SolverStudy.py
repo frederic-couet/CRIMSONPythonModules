@@ -535,7 +535,11 @@ class SolverStudy(object):
         directoryContents = os.listdir(simulation_directory)
         procsCaseFolders = [item for item in directoryContents if '-procs-case' in item]
         if len(procsCaseFolders) != 1:
-            errorMessage = "ERROR: exactly one fluid simulation case (N-procs-case) folder in the fluid_sim directory is required."
+            errorMessage = ("ERROR: exactly one fluid simulation case (N-procs-case) folder in the fluid_sim directory "
+                            "is required.\n"
+                            "If there are none, please run a fluid simulation in the fluid_sim directory.\n"
+                            "If there are more than one, please remove the ones you do not want to use for Lagrangian"
+                            " particle tracking. Then try again.")
             print errorMessage
             raise RuntimeError(errorMessage)
 
@@ -579,6 +583,16 @@ class SolverStudy(object):
             fileList_particleParentDir.close()
 
 
+    def _capOneConfigValueByAnother(self, valueToCapName, cappingValueName, propertiesContainer):
+        if propertiesContainer[valueToCapName] > propertiesContainer[cappingValueName]:
+                Utils.logWarning('Solver Parameter value \"{}\" cannot be greater than the value of \"{}\".'
+                                 ' Setting the former to be equal to the latter.'.format(
+                                                                                         valueToCapName,
+                                                                                         cappingValueName)
+                                )
+                propertiesContainer[valueToCapName] = propertiesContainer[cappingValueName]
+
+
     def _writeParticleConfigJson(self, solverParameters, outputDir_particles, binNames):
         try:
             fileList_particleParentDir = FileList(outputDir_particles)
@@ -590,20 +604,23 @@ class SolverStudy(object):
             particleConfig = dict()
             particleConfig["data file base name"] = props["Particle simulation nametag"]
             particleConfig["input data start timestep"] = props["Start at fluid problem timestep"]
+
+            self._capOneConfigValueByAnother("Finish at fluid problem timestep", "Number of time steps", props)
             particleConfig["input data end timestep"] = props["Finish at fluid problem timestep"]
+
             particleConfig["timesteps between restarts in input data"] = props["Number of time steps between restarts"]
             particleConfig["real time between restarts in input data"] = props["Number of time steps between restarts"] * props["Time step size"]
             particleConfig["tracking simulation starting timestep"] = props["Start at fluid problem timestep"]
             particleConfig["number of cycles to track for"] = props["Repeats"]
             particleConfig["wall has displacement field"] = False
-            particleConfig["steps between repartitioning particles and writing output"] = 20
+            particleConfig["steps between repartitioning particles and writing output"] = props["Output particle solution every"]
             particleConfig["real time through cardiac cycle when simulation starts"] = 0.0
             particleConfig["real time of first systole start"] = 0.0
             particleConfig["real time of first systole end"] = 1.0
             particleConfig["cardiac cycle length"] = 1.0
             particleConfig["maximum particle reinjections"] = props["Maximum reinjections"]
-            particleConfig["tracking steps between each reinjection"] = int(props["Reinject bolus every"] / props["Time step size"])
-            particleConfig["steps before first reinjection"] = int(props["Initial injection time"] / props["Time step size"])
+            particleConfig["tracking steps between each reinjection"] = int(props["Reinject bolus every"] / props["Time step size"] / props["Number of time steps between restarts"])
+            particleConfig["steps before first reinjection"] = int(props["Initial injection time"] / props["Time step size"] / props["Number of time steps between restarts"])
 
             particleConfig["simulation setup"] = dict()
             particleConfig["simulation setup"]["data root"] = outputDir_particles
