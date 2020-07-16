@@ -14,6 +14,8 @@ class PropertyAccessor(object):
     def findItemIndex(propertyList, itemName):
         for i, property in enumerate(propertyList):
             propertyName, propertyValueKey = PropertyAccessor.getNameAndValueKey(property)
+            # Will fail the turkey test; locale dependent. 
+            # https://docs.python.org/2/library/stdtypes.html#str.lower
             if propertyName.lower() == itemName.lower():
                 return (propertyList, i, propertyValueKey)
             if isinstance(property[propertyValueKey], list):
