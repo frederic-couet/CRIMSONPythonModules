@@ -78,6 +78,21 @@ class SolverParameters3D(PropertyStorage):
                 ]
             },
             {
+                "Scalar simulation parameters":
+                [
+                    {
+                        "Residual control": True,
+                    },
+                    {
+                        "Residual criteria": 0.001,
+                        "attributes": {"minimum": 0.0}
+                    },
+                    {
+                        "Step construction sequence": "0 1 0 1 0 1",
+                    },
+                ]
+            },
+            {
                 "Output parameters":
                 [
                     {

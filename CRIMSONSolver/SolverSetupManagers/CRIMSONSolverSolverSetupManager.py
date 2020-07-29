@@ -1,7 +1,6 @@
 from CRIMSONSolver.BoundaryConditionSets.BoundaryConditionSet import BoundaryConditionSet
 from CRIMSONSolver.BoundaryConditions import InitialPressure, NoSlip, PrescribedVelocities, RCR, ZeroPressure, \
     DeformableWall, Netlist, PCMRI
-from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem, ScalarBC
 from CRIMSONSolver.SolverParameters.SolverParameters3D import SolverParameters3D
 from CRIMSONSolver.SolverStudies.SolverStudy import SolverStudy
 from CRIMSONSolver.Materials import DeformableWallMaterial, AnisoDeformableWallMaterial
@@ -25,9 +24,6 @@ class CRIMSONSolverSolverSetupManager(object):
                                          }
         self.materialClasses = {"Deformable wall material": DeformableWallMaterial.DeformableWallMaterial,
                                 "Deformable wall material (anisotropic)": AnisoDeformableWallMaterial.AnisoDeformableWallMaterial}
-        self.scalarProblemClasses = {"Scalar problem set": ScalarProblem.ScalarProblem}
-        self.scalarClasses = {"Scalar": Scalar.Scalar}
-        self.scalarBCClasses = {"Scalar boundary condition": ScalarBC.ScalarBC}
 
     # Boundary condition sets
     def getBoundaryConditionSetNames(self):
@@ -63,24 +59,3 @@ class CRIMSONSolverSolverSetupManager(object):
 
     def createSolverStudy(self, name):
         return self.solverStudyClasses[name]()
-
-    # Scalar problems
-    def getScalarProblemNames(self):
-        return self.scalarProblemClasses.keys()
-
-    def createScalarProblem(self, name):
-        return self.scalarProblemClasses[name]()
-
-    # Scalars
-    def getScalarNames(self, ownerScalarProblem):
-        return self.scalarClasses.keys()
-
-    def createScalar(self, name, ownerScalarProblem):
-        return self.scalarClasses[name]()
-
-    # Scalar boundary conditions
-    def getScalarBCNames(self, ownerScalar):
-        return self.scalarBCClasses.keys()
-
-    def createScalarBC(self, name, ownerScalar):
-        return self.scalarBCClasses[name]()

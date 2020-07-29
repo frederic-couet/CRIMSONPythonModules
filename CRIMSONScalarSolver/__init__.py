@@ -1,11 +1,10 @@
-import BoundaryConditions
-import Materials
+import InitialAndBoundaryConditions
 import BoundaryConditionSets
 import SolverParameters
 import SolverStudies
 import SolverSetupManagers
 
-__all__ = ['BoundaryConditions', 'Materials', 'BoundaryConditionSets', 'SolverParameters', 'SolverStudies',
+__all__ = ['InitialAndBoundaryConditions', 'BoundaryConditionSets', 'SolverParameters', 'SolverStudies',
            'SolverSetupManagers']
 
 import inspect
@@ -15,7 +14,7 @@ def getHumanReadableName(objClass):
     return objClass.humanReadableName if hasattr(objClass, 'humanReadableName') else objClass.__name__
 
 def getSolverSetupManager():
-    solverSetupManagerClass = SolverSetupManagers.CRIMSONSolverSolverSetupManager.CRIMSONSolverSolverSetupManager
+    solverSetupManagerClass = SolverSetupManagers.CRIMSONScalarSolverSetupManager.CRIMSONSolverSolverSetupManager
     return (getHumanReadableName(solverSetupManagerClass), solverSetupManagerClass)
 
 def reloadAll():

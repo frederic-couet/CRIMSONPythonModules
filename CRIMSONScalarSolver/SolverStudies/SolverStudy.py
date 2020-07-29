@@ -23,6 +23,7 @@ from CRIMSONSolver.SolverStudies.Timer import Timer
 from CRIMSONSolver.BoundaryConditions import NoSlip, InitialPressure, RCR, ZeroPressure, PrescribedVelocities, \
     DeformableWall, Netlist, PCMRI
 from CRIMSONSolver.Materials import MaterialData
+from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem, ScalarBC
 
 
 # A helper class providing lazily-evaluated quantities for material computation
@@ -89,6 +90,7 @@ class SolverStudy(object):
         self.meshNodeUID = ""
         self.solverParametersNodeUID = ""
         self.boundaryConditionSetNodeUIDs = []
+        self.scalarProblemNodeUIDs = []
         self.materialNodeUIDs = []
 
     def getMeshNodeUID(self):
@@ -108,6 +110,12 @@ class SolverStudy(object):
 
     def setBoundaryConditionSetNodeUIDs(self, uids):
         self.boundaryConditionSetNodeUIDs = uids
+
+    def getScalarProblemNodeUIDs(self):
+        return self.scalarProblemNodeUIDs
+
+    def setScalarProblemNodeUIDs(self, uids):
+        self.scalarProblemNodeUIDs = uids
 
     def getMaterialNodeUIDs(self):
         if 'materialNodeUIDs' not in self.__dict__:
@@ -184,7 +192,7 @@ class SolverStudy(object):
     # Called from Modules\PythonSolverSetupService\src\PythonSolverStudyData.cpp
     #                      ~line 297: _pyStudyObject.call("writeSolverSetup",...
     def writeSolverSetup(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
-                         materials, vesselPathNames, solutionStorage):
+                         scalars, materials, vesselPathNames, solutionStorage):
 
         outputDir = QtGui.QFileDialog.getExistingDirectory(None, 'Select output folder')
 
@@ -206,7 +214,7 @@ class SolverStudy(object):
 
         try:
             faceIndicesAndFileNames = self._computeFaceIndicesAndFileNames(solidModelData, vesselPathNames)
-            solverInpData = SolverInpData(solverParameters, faceIndicesAndFileNames)
+            solverInpData = SolverInpData(solverParameters, faceIndicesAndFileNames, scalars)
 
             supreFile = fileList[os.path.join('presolver', 'the.supre')]
 
@@ -223,7 +231,7 @@ class SolverStudy(object):
             with Timer('Written adjacency'):
                 self._writeAdjacency(meshData, fileList)
             with Timer('Written boundary conditions'):
-                self._writeBoundaryConditions(vesselForestData, solidModelData, meshData, boundaryConditions,
+                self._writeBoundaryConditions(vesselForestData, solidModelData, meshData, boundaryConditions, scalars,
                                               materials, faceIndicesAndFileNames, solverInpData, fileList,
                                               faceIndicesInAllExteriorFaces)
 
@@ -427,11 +435,12 @@ class SolverStudy(object):
 
         return not hadError
 
-    def _writeBoundaryConditions(self, vesselForestData, solidModelData, meshData, boundaryConditions, materials,
+    def _writeBoundaryConditions(self, vesselForestData, solidModelData, meshData, boundaryConditions, scalars, materials,
                                  faceIndicesAndFileNames, solverInpData, fileList, faceIndicesInAllExteriorFaces):
         if not self._validateBoundaryConditions(boundaryConditions):
             raise RuntimeError('Invalid boundary conditions. Aborting.')
-
+        
+        # TODO: This won't work for the scalar solver, because the fluid and scalar solver both need to write to the same file.
         supreFile = fileList[os.path.join('presolver', 'the.supre')]
 
         class RCRInfo(object):
@@ -756,9 +765,36 @@ class SolverStudy(object):
                     supreFile.write(readSWBCommand + '\n')
                 supreFile.write('deformable_solve\n\n')
 
-        #TODO:  This is where we wrote the scalar block, this is a problem because scalar solver and fluid solver
-        #       share the same supreFile. It's almost like we'd need the fluid solver to find its associated scalar solver (if any)
-        #       and call something like scalarSolver.write(...)
+        # Write scalar block
+        supreFile.write('number_of_scalar_rad_species {0}\n'.format(len(scalars)))
+        supreFile.write('\n')
+
+        for index, scalar in enumerate(scalars):
+            supreFile.write('set_scalar_initial_value {0} {1}\n'.format(index+1,scalar.getProperties()["Initial value"]))
+        supreFile.write('\n')
+
+        faceTypeSufixes = {FaceType.ftCapInflow: '.nbc',
+                            FaceType.ftCapOutflow: '.nbc',
+                            FaceType.ftWall: '.ebc'}
+
+        bcCommand = {"Dirichlet": 'set_scalar_dirichlet_value',
+                    "Neumann": 'set_scalar_flux',
+                     "Do Nothing": 'what_to_write_here?',
+                     "Robin": 'set_scalar_dirichlet_value'}
+
+        for i in xrange(solidModelData.getNumberOfFaceIdentifiers()):
+            faceId = solidModelData.getFaceIdentifier(i)
+            for index, scalar in enumerate(scalars):
+                supreFile.write(bcCommand[scalar.BCs[faceId].type] + ' {0}{1} {2} {3}\n'.format
+                    (faceIndicesAndFileNames[faceId][1],faceTypeSufixes[faceId.faceType],index+1,
+                     scalar.BCs[faceId].value[0]))
+                if scalar.BCs[faceId].type == "Robin":
+                    supreFile.write('set_scalar_flux {0}{1} {2} {3}\n'.format
+                    (faceIndicesAndFileNames[faceId][1], faceTypeSufixes[faceId.faceType], index + 1,
+                     scalar.BCs[faceId].value[1]))
+            supreFile.write('\n')
+        supreFile.write('\n')
+
         # Finalize
         if len(rcrInfo.faceIds) > 0:
             rcrGroup = solverInpData['CARDIOVASCULAR MODELING PARAMETERS: RCR']
