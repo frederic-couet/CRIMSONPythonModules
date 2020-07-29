@@ -1,3 +1,7 @@
+"""
+    This script imports code from all files in the same directory as this script,
+    see https://github.com/amelvill-umich/walk_packages_test for an example
+"""
 import pkgutil
 
 __all__ = []
