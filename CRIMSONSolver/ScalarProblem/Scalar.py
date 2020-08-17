@@ -21,6 +21,12 @@ class Scalar(PropertyStorage):
             },
             {
                 "Diffusion coefficient": 0.0
+            },
+            {
+                "Name":"My Scalar"
+            },
+            {
+                "ID":0
             }
         ]
 
