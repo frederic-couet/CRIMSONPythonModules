@@ -189,8 +189,8 @@ class SolverStudy(object):
                              creationflags=subprocess.CREATE_NEW_CONSOLE)
 
 
-    # Called from Modules\PythonSolverSetupService\src\PythonSolverStudyData.cpp
-    #                      ~line 297: _pyStudyObject.call("writeSolverSetup",...
+    # Called from https://bitbucket.org/cafa/crimson/src/63cb863b1ba79b0bdec5b28453171d59484c8d30/Modules/PythonSolverSetupService/src/PythonSolverStudyData.cpp#lines-385
+    # (bool PythonSolverStudyData::writeSolverSetup(...))
     def writeSolverSetup(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
                          scalars, materials, vesselPathNames, solutionStorage):
 
