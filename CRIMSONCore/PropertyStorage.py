@@ -47,8 +47,9 @@ class PropertyAccessor(object):
             raise TypeError("It is forbidden to modify the property lists")
 
         if type(propertyValue) != type(value):
-            raise TypeError("It is forbidden to change the type of properties. Expected " + type(
-                propertyValue).__name__ + ", received " + type(value).__name__)
+            raise TypeError("It is forbidden to change the type of properties. Propery name: '" + itemName 
+                            + "' Set with '" + str(propertyValue) + "', data of type: '" + type(propertyValue).__name__ 
+                            + "', received value '" + str(value) + "' of type: '" + type(value).__name__ + "'")
 
         propertyList[index][valueKey] = value
 

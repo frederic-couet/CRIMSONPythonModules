@@ -23,10 +23,8 @@ class Scalar(PropertyStorage):
                 "Diffusion coefficient": 0.0
             },
             {
-                "Name":"My Scalar"
-            },
-            {
-                "ID":0
+                # Qt is very heavily invested in Unicode, so this will only work if it's initialized with a unicode literal
+                "ScalarSymbol":u'My Scalar'
             }
         ]
 
