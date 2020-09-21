@@ -4,12 +4,7 @@ from CRIMSONSolver.ScalarProblem.ScalarBC import ScalarBC
 
 class Scalar(PropertyStorage):
     '''
-    Base class for all face-attached data classes (e.g. boundary conditions and materials).
-
-    In addition to having the functionality of a :mod:`PropertyStorage <CRIMSONCore.PropertyStorage>`, the face data
-    also stores a list of :mod:`face identifiers <CRIMSONCore.FaceIdentifier>` stored in ``FaceData.faceIdentifiers``
-    which are filled by the C++ code through user interaction.
-
+    A class representing a scalar quantity in a RAD problem
     '''
     def __init__(self):
         PropertyStorage.__init__(self)
