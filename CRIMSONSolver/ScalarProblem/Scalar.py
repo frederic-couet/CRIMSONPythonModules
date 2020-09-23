@@ -8,12 +8,7 @@ class Scalar(PropertyStorage):
     '''
     def __init__(self):
         PropertyStorage.__init__(self)
-        # Where self.BCs[<faceIdentifier>] = <Instance of ScalarBC>
-        self.BCs = {}
         self.properties = [
-            {
-                "Initial value": 0.0
-            },
             {
                 "Diffusion coefficient": 0.0
             },
@@ -22,9 +17,3 @@ class Scalar(PropertyStorage):
                 "ScalarSymbol":u'My Scalar'
             }
         ]
-
-    def setBC(self, faceIdentifier, scalarBC):  # for use in CPP code
-        self.BCs[faceIdentifier] = scalarBC
-
-    def getBC(self, faceIdentifier):  # for use in CPP code
-        return self.BCs[faceIdentifier]
