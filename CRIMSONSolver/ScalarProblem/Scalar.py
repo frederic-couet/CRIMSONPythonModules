@@ -1,5 +1,6 @@
 from CRIMSONCore.PropertyStorage import PropertyStorage
 from CRIMSONSolver.ScalarProblem.ScalarBC import ScalarBC
+from Reaction import Reaction
 
 
 class Scalar(PropertyStorage):
@@ -11,9 +12,20 @@ class Scalar(PropertyStorage):
         self.properties = [
             {
                 "Diffusion coefficient": 0.0
-            },
-            {
-                # Qt is very heavily invested in Unicode, so this will only work if it's initialized with a unicode literal
-                "ScalarSymbol":u'My Scalar'
             }
+
+            # I am deliberately not including ScalarSymbol as a PropertyStorage property, because it needs special treatment and validation before being renamed,
+            # if the symbol is already in use by a reaction, it needs to rename the symbol in all the reactions in the scalar problem.
+            #
+            # I could hook into the property changed event, but it seems easier to just not show it in the property tree.
         ]
+        self.Reaction = Reaction()
+
+        # Qt is very heavily invested in Unicode
+        self._scalarSymbol = u"new Scalar"
+
+    def getScalarSymbol(self):
+        return self._scalarSymbol
+    
+    def setScalarSymbol(self, scalarSymbol):
+        self._scalarSymbol = scalarSymbol
