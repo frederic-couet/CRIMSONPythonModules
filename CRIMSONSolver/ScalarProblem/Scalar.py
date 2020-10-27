@@ -1,7 +1,4 @@
 from CRIMSONCore.PropertyStorage import PropertyStorage
-from CRIMSONSolver.ScalarProblem.ScalarBC import ScalarBC
-from Reaction import Reaction
-
 
 class Scalar(PropertyStorage):
     '''
@@ -11,7 +8,9 @@ class Scalar(PropertyStorage):
         PropertyStorage.__init__(self)
         self.properties = [
             {
-                "Diffusion coefficient": 0.0
+                "Diffusion coefficient": 0.0,
+               #"Testing Array": ['some', 'test', 'data'],
+                "Testing property": "Is the cmake script working???"
             }
 
             # I am deliberately not including ScalarSymbol as a PropertyStorage property, because it needs special treatment and validation before being renamed,
@@ -19,7 +18,6 @@ class Scalar(PropertyStorage):
             #
             # I could hook into the property changed event, but it seems easier to just not show it in the property tree.
         ]
-        self.Reaction = Reaction()
 
         # Qt is very heavily invested in Unicode
         self._scalarSymbol = u"new Scalar"

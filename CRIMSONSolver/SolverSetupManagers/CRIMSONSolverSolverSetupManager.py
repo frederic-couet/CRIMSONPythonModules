@@ -4,6 +4,7 @@ from CRIMSONSolver.BoundaryConditions import InitialPressure, NoSlip, Prescribed
 
 from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem
 from CRIMSONSolver.ScalarProblem import ScalarDirichlet, ScalarNeumann, InitialConcentration
+from CRIMSONSolver.ScalarProblem import ReactionCoefficient, SolverIteration
 
 from CRIMSONSolver.SolverParameters.SolverParameters3D import SolverParameters3D
 from CRIMSONSolver.SolverStudies.SolverStudy import SolverStudy
@@ -34,6 +35,9 @@ class CRIMSONSolverSolverSetupManager(object):
                                 "Scalar Neumann":   ScalarNeumann.ScalarNeumann,
                                 "Initial Concentration": InitialConcentration.InitialConcentration}
 
+        self.reactionCoefficientClasses = {"Reaction Coefficient": ReactionCoefficient.ReactionCoefficient}
+        self.solverIterationClasses = {"Solver Iteration": SolverIteration.SolverIteration}
+
     # Boundary condition sets
     def getBoundaryConditionSetNames(self):
         return self.boundaryConditionSetClasses.keys()
@@ -42,6 +46,7 @@ class CRIMSONSolverSolverSetupManager(object):
         return self.boundaryConditionSetClasses[name]()
 
     # Boundary conditions
+    # [AJM] Why is it necessary to pass in the ownerBCSet here? It's not used for anything and it makes the C++ code a lot more complicated...
     def getBoundaryConditionNames(self, ownerBCSet):
         return self.boundaryConditionClasses.keys()
 
@@ -89,3 +94,15 @@ class CRIMSONSolverSolverSetupManager(object):
 
     def createScalarBC(self, name, ownerScalar):
         return self.scalarBCClasses[name]()
+
+    def getReactionCoefficientNames(self):
+        return self.reactionCoefficientClasses.keys()
+    
+    def createReactionCoefficient(self, name):
+        return self.reactionCoefficientClasses[name]
+    
+    def getSolverIterationNames(self):
+        return self.solverIterationClasses.keys()
+    
+    def createSolverIteration(self, name):
+        return self.solverIterationClasses[name]
