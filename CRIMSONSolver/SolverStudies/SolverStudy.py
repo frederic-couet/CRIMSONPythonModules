@@ -92,6 +92,7 @@ class SolverStudy(object):
         self.boundaryConditionSetNodeUIDs = []
         self.scalarProblemNodeUIDs = []
         self.materialNodeUIDs = []
+        self.genericNodeUIDs = {}
 
     def getMeshNodeUID(self):
         return self.meshNodeUID
@@ -124,6 +125,17 @@ class SolverStudy(object):
 
     def setMaterialNodeUIDs(self, uids):
         self.materialNodeUIDs = uids
+
+    def getGenericNodeUIDs(self, typeID):
+        if(typeID not in self.genericNodeUIDs):
+            return []
+        
+        else:
+            uidsForTypeID = self.genericNodeUIDs[typeID]
+            return uidsForTypeID
+    
+    def setGenericNodeUIDs(self, typeID, uids):
+        self.genericNodeUIDs[typeID] = uids
 
     def loadSolution(self):
         fullNames = QtGui.QFileDialog.getOpenFileNames(None, "Load solution")

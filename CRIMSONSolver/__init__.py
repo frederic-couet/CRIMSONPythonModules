@@ -7,7 +7,7 @@ import SolverSetupManagers
 import ScalarProblem
 
 __all__ = ['BoundaryConditions', 'Materials', 'BoundaryConditionSets', 'SolverParameters', 'SolverStudies',
-           'SolverSetupManagers', 'ScalarProblem']
+           'SolverSetupManagers', 'ScalarProblem', 'Generic']
 
 import inspect
 
