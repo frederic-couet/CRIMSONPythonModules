@@ -50,7 +50,8 @@ class CRIMSONSolverSolverSetupManager(object):
             "PCMRIPoint",
             ScalarProblem.__name__,
             Scalar.__name__,
-            "ScalarBoundaryCondition"
+            "ScalarBoundaryCondition",
+            "ReactionCoefficient"
         ]
 
     def getTypeIDToTypeNameDictionary():
