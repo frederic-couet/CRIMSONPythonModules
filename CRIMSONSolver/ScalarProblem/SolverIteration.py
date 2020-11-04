@@ -1,8 +1,3 @@
-#---------------------------------------------------------------------------------------------------
-## Class definition
-## Put this section in PythonModules\CRIMSONSolver\ScalarProblem\SolverIteration.py
-#---------------------------------------------------------------------------------------------------
-
 # source automatically generated for Python class "SolverIteration"
 # using GenerateNewSolverObject.
 #
@@ -11,7 +6,7 @@
 from CRIMSONCore.PropertyStorage import PropertyStorage
 
 '''
-    TODO: Please put a useful comment here about what this class is
+    A class representing one solver iteration as part of a timestep
 '''
 class SolverIteration(PropertyStorage):
 
@@ -19,8 +14,7 @@ class SolverIteration(PropertyStorage):
         PropertyStorage.__init__(self)
         self.properties = [
             {
-                # TODO: Put your properties here
+                "Solver": "Fluid",
+                "Number of iterations": 1
             }
         ]
-    
-    # TODO: Put any other methods you need here

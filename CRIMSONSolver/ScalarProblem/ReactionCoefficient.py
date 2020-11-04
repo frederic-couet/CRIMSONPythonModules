@@ -1,8 +1,3 @@
-#---------------------------------------------------------------------------------------------------
-## Class definition
-## Put this section in PythonModules\CRIMSONSolver\ScalarProblem\ReactionCoefficient.py
-#---------------------------------------------------------------------------------------------------
-
 # source automatically generated for Python class "ReactionCoefficient"
 # using GenerateNewSolverObject.
 #
@@ -11,7 +6,7 @@
 from CRIMSONCore.PropertyStorage import PropertyStorage
 
 '''
-    TODO: Please put a useful comment here about what this class is
+    A python class representing a scalar reaction coefficient, e.g., k1, k2, k3
 '''
 class ReactionCoefficient(PropertyStorage):
 
@@ -19,8 +14,7 @@ class ReactionCoefficient(PropertyStorage):
         PropertyStorage.__init__(self)
         self.properties = [
             {
-                # TODO: Put your properties here
+                "Coefficient Name": "k"
+                "Value": 1.0
             }
         ]
-    
-    # TODO: Put any other methods you need here

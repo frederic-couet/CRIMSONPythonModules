@@ -92,6 +92,8 @@ class SolverStudy(object):
         self.boundaryConditionSetNodeUIDs = []
         self.scalarProblemNodeUIDs = []
         self.materialNodeUIDs = []
+        self.reactionCoefficientNodeUIDs = []
+        self.solverIterationNodeUIDs = []
 
     def getMeshNodeUID(self):
         return self.meshNodeUID
@@ -124,6 +126,18 @@ class SolverStudy(object):
 
     def setMaterialNodeUIDs(self, uids):
         self.materialNodeUIDs = uids
+    
+    def getReactionCoefficientNodeUIDs(self):
+        return self.reactionCoefficientNodeUIDs
+
+    def setReactionCoefficientNodeUIDs(self, uids):
+        self.reactionCoefficientNodeUIDs = uids
+
+    def getSolverIterationNodeUIDs(self):
+        return self.solverIterationNodeUIDs
+
+    def setSolverIterationNodeUIDs(self, uids):
+        self.solverIterationNodeUIDs = uids
 
     def loadSolution(self):
         fullNames = QtGui.QFileDialog.getOpenFileNames(None, "Load solution")
