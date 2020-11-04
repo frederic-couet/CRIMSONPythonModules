@@ -94,6 +94,8 @@ class SolverStudy(object):
         self.materialNodeUIDs = []
         self.reactionCoefficientNodeUIDs = []
         self.solverIterationNodeUIDs = []
+        self.scalarNodeUIDs = []
+        self.scalarBCNodeUIDs = []
 
     def getMeshNodeUID(self):
         return self.meshNodeUID
@@ -118,6 +120,18 @@ class SolverStudy(object):
 
     def setScalarProblemNodeUIDs(self, uids):
         self.scalarProblemNodeUIDs = uids
+
+    def getScalarNodeUIDs(self):
+        return self.scalarNodeUIDs
+
+    def setScalarNodeUIDs(self, uids):
+        self.scalarNodeUIDs = uids
+
+    def getScalarBCNodeUIDs(self):
+        return self.scalarBCNodeUIDs
+
+    def setScalarBCNodeUIDs(self, uids):
+        self.scalarBCNodeUIDs = uids
 
     def getMaterialNodeUIDs(self):
         if 'materialNodeUIDs' not in self.__dict__:
