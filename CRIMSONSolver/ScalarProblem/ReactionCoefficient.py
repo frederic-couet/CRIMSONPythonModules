@@ -13,8 +13,12 @@ class ReactionCoefficient(PropertyStorage):
     def __init__(self):
         PropertyStorage.__init__(self)
         self.properties = [
-            {
-                "Coefficient Name": "k"
-                "Value": 1.0
-            }
+                {
+                    "Coefficient Value": 1.1,
+                },
+
+                {
+                    "Coefficient Name": u"ka",
+                }
+                        
         ]

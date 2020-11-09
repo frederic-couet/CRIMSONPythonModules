@@ -14,7 +14,9 @@ class SolverIteration(PropertyStorage):
         PropertyStorage.__init__(self)
         self.properties = [
             {
-                "Solver": "Fluid",
+                "Solver": "Fluid"
+            },
+            {
                 "Number of iterations": 1
             }
         ]

@@ -99,10 +99,10 @@ class CRIMSONSolverSolverSetupManager(object):
         return self.reactionCoefficientClasses.keys()
     
     def createReactionCoefficient(self, name):
-        return self.reactionCoefficientClasses[name]
+        return self.reactionCoefficientClasses[name]()
     
     def getSolverIterationNames(self):
         return self.solverIterationClasses.keys()
     
     def createSolverIteration(self, name):
-        return self.solverIterationClasses[name]
+        return self.solverIterationClasses[name]()

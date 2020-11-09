@@ -9,8 +9,7 @@ class Scalar(PropertyStorage):
         self.properties = [
             {
                 "Diffusion coefficient": 0.0,
-               #"Testing Array": ['some', 'test', 'data'],
-                "Testing property": "Is the cmake script working???"
+
             }
 
             # I am deliberately not including ScalarSymbol as a PropertyStorage property, because it needs special treatment and validation before being renamed,
