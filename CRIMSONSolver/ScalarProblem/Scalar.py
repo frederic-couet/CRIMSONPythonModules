@@ -1,6 +1,4 @@
 from CRIMSONCore.PropertyStorage import PropertyStorage
-from CRIMSONSolver.ScalarProblem.ScalarBC import ScalarBC
-from Reaction import Reaction
 
 
 class Scalar(PropertyStorage):
@@ -19,7 +17,6 @@ class Scalar(PropertyStorage):
             #
             # I could hook into the property changed event, but it seems easier to just not show it in the property tree.
         ]
-        self.Reaction = Reaction()
 
         # Qt is very heavily invested in Unicode
         self._scalarSymbol = u"new Scalar"

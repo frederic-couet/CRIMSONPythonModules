@@ -23,7 +23,7 @@ from CRIMSONSolver.SolverStudies.Timer import Timer
 from CRIMSONSolver.BoundaryConditions import NoSlip, InitialPressure, RCR, ZeroPressure, PrescribedVelocities, \
     DeformableWall, Netlist, PCMRI
 from CRIMSONSolver.Materials import MaterialData
-from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem, ScalarBC
+from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem
 
 
 # A helper class providing lazily-evaluated quantities for material computation
