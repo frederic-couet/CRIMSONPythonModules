@@ -9,8 +9,18 @@ class SolverType(object):
     memLS, acusim = range(2)
 
 class SolverParameters3D(PropertyStorage):
+
+    def setIterations(self, iterations):
+        self.Iterations = iterations
+    
+    def getIterations(self):
+        return self.Iterations
+
     def __init__(self):
         PropertyStorage.__init__(self)
+
+        self.Iterations = []
+
         self.properties = [
             {
                 "Time parameters":
