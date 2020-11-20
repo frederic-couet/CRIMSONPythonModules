@@ -20,9 +20,16 @@ class Scalar(PropertyStorage):
 
         # Qt is very heavily invested in Unicode
         self._scalarSymbol = u"new Scalar"
+        self._reactionString = u""
 
     def getScalarSymbol(self):
         return self._scalarSymbol
     
     def setScalarSymbol(self, scalarSymbol):
         self._scalarSymbol = scalarSymbol
+
+    def getReactionString(self):
+        return self._reactionString
+    
+    def setReactionString(self, reactionString):
+        self._reactionString = reactionString
