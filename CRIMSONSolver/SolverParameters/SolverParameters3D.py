@@ -16,6 +16,28 @@ class SolverParameters3D(PropertyStorage):
     def getIterations(self):
         return self.Iterations
 
+    def _getStepConstructionSection(self):
+        simParametersCategory = self.properties[2]
+        simParameters = simParametersCategory['Simulation parameters']
+        stepConstructionSection = simParameters[5]
+
+        return stepConstructionSection
+
+    def getFluidIterationCount(self):
+        stepConstructionSection = self._getStepConstructionSection()
+        numberOfSteps = stepConstructionSection['Step construction']
+
+        #print('DEBUG: [get] Properties is')
+        #print(self.properties)
+        return numberOfSteps
+
+    def setFluidIterationCount(self, fluidIterationCount):
+        stepConstructionSection = self._getStepConstructionSection()
+        stepConstructionSection['Step construction'] = fluidIterationCount
+
+        #print('DEBUG: [set] Properties is')
+        #print(self.properties)
+
     def __init__(self):
         PropertyStorage.__init__(self)
 
@@ -88,6 +110,7 @@ class SolverParameters3D(PropertyStorage):
                 ]
             },
             {
+                #TODO: I think this is unused
                 "Scalar simulation parameters":
                 [
                     {

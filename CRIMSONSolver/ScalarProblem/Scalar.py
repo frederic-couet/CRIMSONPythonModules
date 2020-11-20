@@ -9,11 +9,11 @@ class Scalar(PropertyStorage):
         PropertyStorage.__init__(self)
         self.properties = [
             {
-                "Diffusion coefficient": 0.0
+                "Diffusion coefficient": 1.1
             }
 
             # I am deliberately not including ScalarSymbol as a PropertyStorage property, because it needs special treatment and validation before being renamed,
-            # if the symbol is already in use by a reaction, it needs to rename the symbol in all the reactions in the scalar problem.
+            # the UI renames the node and checks for duplicates.
             #
             # I could hook into the property changed event, but it seems easier to just not show it in the property tree.
         ]
@@ -28,6 +28,7 @@ class Scalar(PropertyStorage):
     def setScalarSymbol(self, scalarSymbol):
         self._scalarSymbol = scalarSymbol
 
+    # I made a function for this because I want to show a nicer UI in a separate window
     def getReactionString(self):
         return self._reactionString
     
