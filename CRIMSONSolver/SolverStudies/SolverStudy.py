@@ -24,6 +24,7 @@ from CRIMSONSolver.BoundaryConditions import NoSlip, InitialPressure, RCR, ZeroP
     DeformableWall, Netlist, PCMRI
 from CRIMSONSolver.Materials import MaterialData
 from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem
+from CRIMSONSolver.ScalarProblem.GenerateScalarProblemSpecification import GenerateSpecification
 
 
 # A helper class providing lazily-evaluated quantities for material computation
@@ -90,8 +91,14 @@ class SolverStudy(object):
         self.meshNodeUID = ""
         self.solverParametersNodeUID = ""
         self.boundaryConditionSetNodeUIDs = []
-        self.scalarProblemNodeUIDs = []
+        self.scalarProblemNodeUID = ""  
         self.materialNodeUIDs = []
+
+    # About the UID methods:
+    #   -   The get/set UID(s) methods are meant to represent the current set of *selected nodes* in the study.
+    #   -   For example, you may have more than one mesh in your data tree, but you can only select one for your study.
+    #   -   For data types like meshes where there's only one selection allowed, the Study tab in SolverSetupView has a Combo Box 
+    #       for users to specify which mesh they want to use in the simulation.
 
     def getMeshNodeUID(self):
         return self.meshNodeUID
@@ -111,11 +118,11 @@ class SolverStudy(object):
     def setBoundaryConditionSetNodeUIDs(self, uids):
         self.boundaryConditionSetNodeUIDs = uids
 
-    def getScalarProblemNodeUIDs(self):
-        return self.scalarProblemNodeUIDs
+    def getScalarProblemNodeUID(self):
+        return self.scalarProblemNodeUID
 
-    def setScalarProblemNodeUIDs(self, uids):
-        self.scalarProblemNodeUIDs = uids
+    def setScalarProblemNodeUID(self, uid):
+        self.scalarProblemNodeUID = uid
 
     def getMaterialNodeUIDs(self):
         if 'materialNodeUIDs' not in self.__dict__:
@@ -188,8 +195,11 @@ class SolverStudy(object):
                              cwd=flowsolverDirectory,
                              creationflags=subprocess.CREATE_NEW_CONSOLE)
 
+    def _writeScalarProblemSpecification(self):
+        pass
 
-    # Called from https://bitbucket.org/cafa/crimson/src/63cb863b1ba79b0bdec5b28453171d59484c8d30/Modules/PythonSolverSetupService/src/PythonSolverStudyData.cpp#lines-385
+
+    # Called from https://github.com/CRIMSONCardiovascularModelling/crimson_gui_private/blob/16ebe6f65706a223098f940cff0b6f117f839022/Modules/PythonSolverSetupService/src/PythonSolverStudyData.cpp#L294
     # (bool PythonSolverStudyData::writeSolverSetup(...))
     def writeSolverSetup(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
                          scalars, materials, vesselPathNames, solutionStorage):
