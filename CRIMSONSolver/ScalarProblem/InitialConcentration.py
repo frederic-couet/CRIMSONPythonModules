@@ -1,7 +1,7 @@
 from CRIMSONCore.FaceData import FaceData
 from PythonQt.CRIMSON import FaceType
 
-
+# Note that this boundary condition is uniform throughout the entire solid, there is no need to select faces for this.
 class InitialConcentration(FaceData):
     unique = False
     humanReadableName = "Initial Concentration"
