@@ -55,11 +55,16 @@ def _getValidFaceIdentifiers(solidModelData, boundaryCondition):
 
     return validFaceIdentifiers
 
+
 """
+    Throws:
+        RuntimeError if there is not at least one initial condition (the presolver won't even accept it)
+
     returns:
         Complete string containing the entirety of the information needed to be written for the scalar boundary conditions section.
 """
 def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileNames, scalarBCsForSingleScalar, scalarSymbol, scalarIndex):
+
     initialConcentration = None
 
     # Scalar numbers are 1 based
@@ -68,18 +73,19 @@ def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileName
     # Don't want to use this by accident.
     scalarIndex = None
 
-    boundaryConditionsString = ""
-    boundaryConditionsString += "#Boundary Conditions for scalar number {} ('{}')\n".format(scalarNumber, scalarSymbol)
+    print('Found ', len(scalarBCsForSingleScalar), ' boundary and initial conditions for scalar #', scalarNumber, ' ("',scalarSymbol,'")', sep='')
+
+    allBoundaryConditionsString = ""
+    allBoundaryConditionsString += "#Boundary Conditions for scalar number {} ('{}')\n".format(scalarNumber, scalarSymbol)
+
+    initialConditionBC = None
 
     for scalarBC in scalarBCsForSingleScalar:
         bcProperties = scalarBC.getProperties()
-
-
-        bcLine = None
-        initialConditionBC = None
         boundaryConditionString = ''
 
-        if(isinstance(scalarBC, ScalarNeumann.ScalarNeumann)):            
+        if(isinstance(scalarBC, ScalarNeumann.ScalarNeumann)):   
+            #print('DEBUG: detected Neumann bc')         
             bcValidFaceIDs = _getValidFaceIdentifiers(solidModelData, scalarBC)
             if(len(bcValidFaceIDs) < 1):
                 print('WARNING: no valid face Ids for BC of type', str(type(scalarBC)))
@@ -96,6 +102,7 @@ def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileName
             boundaryConditionString += faceLines
 
         elif(isinstance(scalarBC, ScalarDirichlet.ScalarDirichlet)):
+            #print('DEBUG: detected Dirichlet bc')    
             bcValidFaceIDs = _getValidFaceIdentifiers(solidModelData, scalarBC)
             if(len(bcValidFaceIDs) < 1):
                 print('WARNING: no valid face Ids for BC of type', str(type(scalarBC)))
@@ -112,6 +119,7 @@ def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileName
             boundaryConditionString += faceLines
 
         elif(isinstance(scalarBC, InitialConcentration.InitialConcentration)):
+            #print('DEBUG: detected Initial Concentration bc')
             if(initialConditionBC is not None):
                 print('Warning: More than one initial concentration boundary condition provided. Only the first one will be used.')
                 continue
@@ -120,13 +128,18 @@ def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileName
 
             boundaryConditionString = 'set_scalar_initial_value {} {}\n'.format(scalarNumber, initialValue)
 
+            initialConditionBC = scalarBC
+
         else:
             print("Unexpected scalar boundary condition of type '", str(type(scalarBC)))
             continue
 
-        boundaryConditionsString += boundaryConditionString
+        allBoundaryConditionsString += boundaryConditionString
 
-    return boundaryConditionsString
+    if(initialConditionBC is None):
+        raise RuntimeError("No initial condition provided for scalar #{} ('{}'). At least one initial condition must be provided for each scalar.".format(scalarNumber, scalarSymbol))
+
+    return allBoundaryConditionsString
 
 
 # A helper class providing lazily-evaluated quantities for material computation
@@ -316,9 +329,9 @@ class SolverStudy(object):
     def writeSolverSetup(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
                          scalarProblem, scalars, scalarBCs, materials, vesselPathNames, solutionStorage):
 
-        print('DEBUG: scalars is:', scalars)
-        print('DEBUG: scalarProblem is:', scalarProblem)
-        print('DEBUG: scalar BCs are:', scalarBCs)
+        #print('DEBUG: scalars is:', scalars)
+        #print('DEBUG: scalarProblem is:', scalarProblem)
+        #print('DEBUG: scalar BCs are:', scalarBCs)
 
         for scalar in scalars:
             print('Scalar symbol: ', scalar.getScalarSymbol())
@@ -346,7 +359,7 @@ class SolverStudy(object):
 
         try:
             faceIndicesAndFileNames = self._computeFaceIndicesAndFileNames(solidModelData, vesselPathNames)
-            print('DEBUG: faceIndicesAndFileNames is', faceIndicesAndFileNames)
+            #print('DEBUG: faceIndicesAndFileNames is', faceIndicesAndFileNames)
             # TODO: provide scalar influx coefficient, scalar start time, and number of scalars
             solverInpData = SolverInpData(solverParameters, faceIndicesAndFileNames)
 
@@ -906,6 +919,9 @@ class SolverStudy(object):
         supreFile.write('number_of_scalar_rad_species {0}\n'.format(len(scalars)))
         supreFile.write('\n')
 
+        #print('DEBUG: Scalar bcs dictionary:')
+        #print(scalarBCsDict)
+
         #%% Write scalar boundary conditions
         for scalarIndex in range(len(scalars)):
             scalar = scalars[scalarIndex]
@@ -919,8 +935,8 @@ class SolverStudy(object):
                                                                                     scalarIndex
                                                                                     )
 
-            print('DEBUG: scalarBoundaryConditionsString is')
-            print(scalarBoundaryConditionsString)
+            #print('DEBUG: scalarBoundaryConditionsString is')
+            #print(scalarBoundaryConditionsString)
             # NOTE: Do not append '\n'
             supreFile.write(scalarBoundaryConditionsString)
 
