@@ -11,6 +11,34 @@ class SolverType(object):
 # Note: this class is primarily responsible for holding data that gets written to solver.inp
 class SolverParameters3D(PropertyStorage):
 
+    # Where iterations is a list of dict
+    # [
+    #   {
+    #       "Operation": <scalar symbol>,
+    #       "Iterations": <Number of iterations>
+    #   },
+    #   ...
+    # ]
+    #
+    # Example:
+    # [
+    #   {
+    #       "Operation": "III",
+    #       "Iterations" 8
+    #   },
+    #   {
+    #       "Operation": "IV",
+    #       "Iterations" 20
+    #   },
+    #   {
+    #       "Operation": "III",
+    #       "Iterations" 5
+    #   },
+    #   {
+    #       "Operation": "IV",
+    #       "Iterations" 6
+    #   },
+    # ]
     def setIterations(self, iterations):
         self.Iterations = iterations
     

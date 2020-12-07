@@ -141,6 +141,36 @@ def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileName
 
     return allBoundaryConditionsString
 
+def _writeScalarProblemSpecification(solverParameters, scalarProblem, scalars, outputDir):
+    if(scalarProblem is None):
+        return
+    
+    scalarIterations = solverParameters.getIterations()
+    fluidIterationCount = solverParameters.getFluidIterationCount()
+    reactionCoefficients = scalarProblem.getReactionCoefficients()
+
+    scalarSymbols = []
+    diffusionCoefficients = dict()
+    reactionStrings = dict()
+
+    for scalar in scalars:
+        scalarSymbol = scalar.getScalarSymbol()
+
+        if(scalarSymbol in scalarSymbols):
+            print("Unexpected error: Duplicate scalar symbol '", scalarSymbol, "'", sep='')
+            continue
+
+        scalarSymbols.append(scalarSymbol)
+        diffusionCoefficients[scalarSymbol] = scalar.getProperties()['Diffusion coefficient']
+        reactionStrings[scalarSymbol] = scalar.getReactionString()
+
+    specificationFileString = GenerateSpecification(fluidIterationCount, scalarIterations, diffusionCoefficients, scalarSymbols, reactionCoefficients, reactionStrings)
+
+    filePath = os.path.join(outputDir, 'generated_scalarProblemSpecification.py')
+    with open(filePath, 'wb') as specificationFile:
+        specificationFile.write(specificationFileString)
+
+    print('Wrote scalarProblemSpecification to "', filePath, "'", sep='')
 
 # A helper class providing lazily-evaluated quantities for material computation
 class MaterialFaceInfo(object):
@@ -319,9 +349,6 @@ class SolverStudy(object):
                              cwd=flowsolverDirectory,
                              creationflags=subprocess.CREATE_NEW_CONSOLE)
 
-    def _writeScalarProblemSpecification(self):
-        #TODO: Implement this method, it should call methods in ScalarProblem/GenerateScalarProblemSpecification
-        pass
 
 
     # Called from https://github.com/CRIMSONCardiovascularModelling/crimson_gui_private/blob/16ebe6f65706a223098f940cff0b6f117f839022/Modules/PythonSolverSetupService/src/PythonSolverStudyData.cpp#L294
@@ -351,6 +378,9 @@ class SolverStudy(object):
 
         if not outputDir:
             return
+
+        if(enableScalar):
+            _writeScalarProblemSpecification(solverParameters, scalarProblem, scalars, outputDir)
 
         if solutionStorage is not None:
             if QtGui.QMessageBox.question(None, 'Write solution to the solver output?',
