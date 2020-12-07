@@ -8,6 +8,7 @@ class SolverType(object):
     enumNames = ["memLS", "acusim"]
     memLS, acusim = range(2)
 
+# Note: this class is primarily responsible for holding data that gets written to solver.inp
 class SolverParameters3D(PropertyStorage):
 
     def setIterations(self, iterations):
@@ -41,6 +42,7 @@ class SolverParameters3D(PropertyStorage):
     def __init__(self):
         PropertyStorage.__init__(self)
 
+        # NOTE: These iterations are not written to solver.inp, they are used by a second Python file in the flowsolver.
         self.Iterations = []
 
         self.properties = [
