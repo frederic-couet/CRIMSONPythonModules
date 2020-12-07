@@ -110,19 +110,39 @@ class SolverParameters3D(PropertyStorage):
                 ]
             },
             {
-                #TODO: I think this is unused
                 "Scalar simulation parameters":
                 [
                     {
-                        "Residual control": True,
+                        "Scalar Influx Coefficient": 0.5,
+                        "attributes": {"minimum": 0.01, "maximum": 1.0}
                     },
+
+                    # If you want to run the fluid solver only for a few timesteps before running the scalar simulation
+                    # (e.g., to let the fluids "settle out"), set this to something other than timestep 1.
+                    # Note that timesteps are 1-based. This is NOT an iteration.
                     {
-                        "Residual criteria": 0.001,
-                        "attributes": {"minimum": 0.0}
+                        "Scalar Start Time": 1,
+                        "attributes": {"minimum": 1}
                     },
+
+                    # If you want to stop running the flowsolver after a certain number of timesteps, but continue running
+                    # the scalar problem after that, enable this option and set the timestep to stop on
                     {
-                        "Step construction sequence": "0 1 0 1 0 1",
+                        "End Solve Flow": False,
                     },
+
+                    {
+                        "End Flow Time": 1,
+                        "attributes": {"minimum": 1}
+                    },
+
+                    # Type type of scalar discontinuity capturing, 
+                    # 1 0 is the one we usually use.
+                    {
+                        "Scalar Discontinuity Capturing": "1 0"
+                    },
+
+
                 ]
             },
             {

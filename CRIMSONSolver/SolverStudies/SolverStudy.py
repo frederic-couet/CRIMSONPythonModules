@@ -326,13 +326,24 @@ class SolverStudy(object):
 
     # Called from https://github.com/CRIMSONCardiovascularModelling/crimson_gui_private/blob/16ebe6f65706a223098f940cff0b6f117f839022/Modules/PythonSolverSetupService/src/PythonSolverStudyData.cpp#L294
     # (bool PythonSolverStudyData::writeSolverSetup(...))
+    #
+    # If the scalar problem simulation checkbox is NOT enabled, here's what these parameters will have:
+    # - scalarProblem: None
+    # - scalars: [] (empty list)
+    # - scalarBCs: {} (empty dict)
     def writeSolverSetup(self, vesselForestData, solidModelData, meshData, solverParameters, boundaryConditions,
                          scalarProblem, scalars, scalarBCs, materials, vesselPathNames, solutionStorage):
 
         #print('DEBUG: scalars is:', scalars)
         #print('DEBUG: scalarProblem is:', scalarProblem)
         #print('DEBUG: scalar BCs are:', scalarBCs)
+        enableScalar = (scalarProblem is not None)
 
+        if(enableScalar):
+            print('No scalar problem detected.')
+        else:
+            print('Scalar simulation detected.')
+        
         for scalar in scalars:
             print('Scalar symbol: ', scalar.getScalarSymbol())
 
@@ -359,9 +370,8 @@ class SolverStudy(object):
 
         try:
             faceIndicesAndFileNames = self._computeFaceIndicesAndFileNames(solidModelData, vesselPathNames)
-            #print('DEBUG: faceIndicesAndFileNames is', faceIndicesAndFileNames)
-            # TODO: provide scalar influx coefficient, scalar start time, and number of scalars
-            solverInpData = SolverInpData(solverParameters, faceIndicesAndFileNames)
+
+            solverInpData = SolverInpData(solverParameters, faceIndicesAndFileNames, len(scalars))
 
             supreFile = fileList[os.path.join('presolver', 'the.supre')]
 
@@ -383,7 +393,7 @@ class SolverStudy(object):
                                               materials, faceIndicesAndFileNames, solverInpData, fileList,
                                               faceIndicesInAllExteriorFaces)
 
-            self._writeSolverSetup(solverInpData, fileList)
+            self._writeSolverSetup(solverInpData, fileList, enableScalar)
 
             supreFile.write('write_geombc  geombc.dat.1\n')
             supreFile.write('write_restart  restart.0.1\n')
@@ -554,8 +564,11 @@ class SolverStudy(object):
         return self._writeEbc(meshData, allFaceIdentifiers,
                               fileList[os.path.join('presolver', 'all_exterior_faces.ebc')])
 
-    def _writeSolverSetup(self, solverInpData, fileList):
+    def _writeSolverSetup(self, solverInpData, fileList, enableScalar):
         solverInpFile = fileList['solver.inp', 'wb']
+
+        if(enableScalar):
+            solverInpFile.write('Use Python for Scalar Problem Reaction Terms : True\n')
 
         for category, values in sorted(solverInpData.data.iteritems()):
             solverInpFile.write('\n\n# {0}\n# {{\n'.format(category))
