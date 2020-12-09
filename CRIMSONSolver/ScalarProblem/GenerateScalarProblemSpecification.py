@@ -36,9 +36,9 @@ ReactionExpressions = {}
 # End code from UI
 #---------------------------------------------------------------------------------------------------"""
 
-def _FormatSpecification(fluidIterations, iterations, diffusionCoefficients, scalarNames, reactionCoefficients, coefficientSymbolSection, scalarSymbolsSection, symbolsSection, reactionExpressions):
+def _FormatSpecification(numberOfFluidIterations, iterations, diffusionCoefficients, scalarNames, reactionCoefficients, coefficientSymbolSection, scalarSymbolsSection, symbolsSection, reactionExpressions):
     currentDateAndTime = datetime.datetime.now()
-    return _generatedCodeTemplate.format(currentDateAndTime, fluidIterations, iterations, diffusionCoefficients, scalarNames, reactionCoefficients, coefficientSymbolSection, scalarSymbolsSection, symbolsSection, reactionExpressions)
+    return _generatedCodeTemplate.format(currentDateAndTime, numberOfFluidIterations, iterations, diffusionCoefficients, scalarNames, reactionCoefficients, coefficientSymbolSection, scalarSymbolsSection, symbolsSection, reactionExpressions)
 
 # Because \t doesn't seem to resolve to '    ', and I really don't want to mix tabs and spaces.
 # keep in sync with _ObjectToJSON().
@@ -170,7 +170,11 @@ def GenerateSpecification(fluidIterationsCount, scalarIterations, diffusionCoeff
 
     reactionExpressionsLiteral = _FormatReactionExpressionsLiteral(reactionStringsDict)
 
-    return _FormatSpecification(fluidIterationsCount, iterationsLiteral, diffusionCoefficientsLiteral, scalarNamesLiteral, reactionCoefficientsLiteral, coefficientsDefinitions, scalarsDefinitions, symbolNamesLiteral, reactionExpressionsLiteral)
+    # The number of fluid iterations is the number of update/solve steps, so that means it's double what was entered into the UI.
+    # Also remember that this is 0 based
+    numberOfFluidIterations = fluidIterationsCount * 2
+
+    return _FormatSpecification(numberOfFluidIterations, iterationsLiteral, diffusionCoefficientsLiteral, scalarNamesLiteral, reactionCoefficientsLiteral, coefficientsDefinitions, scalarsDefinitions, symbolNamesLiteral, reactionExpressionsLiteral)
 
 
     
