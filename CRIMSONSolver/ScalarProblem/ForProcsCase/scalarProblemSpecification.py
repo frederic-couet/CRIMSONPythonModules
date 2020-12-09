@@ -186,7 +186,7 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
                 scalarIndex = ScalarNameToIndex[symbolName]
 
                 if(scalarIndex not in self.scalarStateVectorsDictionary):
-                    raise RuntimeError('Scalar index {} could not be found in scalarStateVectorsDictionary. Contents of dictionary: {}'.format(scalarIndex, self.scalarStateVectorsDictionary))
+                    raise RuntimeError('Scalar index {} could not be found in scalarStateVectorsDictionary. Contents of dictionary: {}'.format(scalarIndex, self.scalarStateVectorsDictionary.keys()))
 
                 value = self.scalarStateVectorsDictionary[scalarIndex]
                 
