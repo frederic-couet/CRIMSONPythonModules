@@ -1,6 +1,7 @@
 """
     This file contains helper functions that will not change depending on what values are entered from the UI.
     This file needs to be placed in 1-procs-case, alongside solver.inp
+        This is NOT ran by the PythonModules. This is ran by the flowsolver.
 
     Be very careful about one based and zero based scalar indexes!
 
@@ -8,6 +9,8 @@
         scalarIndex: **Zero based** scalar Index, for Python. 
         scalarNumber: **One based** scalar identifier, this is used for communicating with the flowsolver.
             Generally any input or output to or from this script will be a scalarNumber, not a scalarIndex.
+
+    AJM (Dec. 2020)
 """
 
 from __future__ import print_function

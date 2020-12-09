@@ -70,7 +70,9 @@ setup(name='CRIMSON',
                 'CRIMSONSolver.SolverParameters',
                 'CRIMSONSolver.SolverStudies',
                 'CRIMSONSolver.Materials',
-				'CRIMSONSolver.ScalarProblem'
+                'CRIMSONSolver.ScalarProblem',
+                # this is NOT imported by the PythonModules, but is copied in as part of the data that goes along with solver.inp for scalar simulations
+                'CRIMSONSolver.ScalarProblem.ForProcsCase',
                 ],
       py_modules=['upgradeScene', 'upgradeScene2'],
       data_files = data_files_in
