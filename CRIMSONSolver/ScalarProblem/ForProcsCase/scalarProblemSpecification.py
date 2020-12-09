@@ -1,6 +1,13 @@
 """
     This file contains helper functions that will not change depending on what values are entered from the UI.
     This file needs to be placed in 1-procs-case, alongside solver.inp
+
+    Be very careful about one based and zero based scalar indexes!
+
+    For the sake of making it a bit clearer, I am using the following convention:
+        scalarIndex: **Zero based** scalar Index, for Python. 
+        scalarNumber: **One based** scalar identifier, this is used for communicating with the flowsolver.
+            Generally any input or output to or from this script will be a scalarNumber, not a scalarIndex.
 """
 
 from __future__ import print_function
@@ -75,6 +82,10 @@ def GenerateNamesToIndexes():
 
 ScalarNameToIndex = GenerateNamesToIndexes()
 
+# Scalar numbers are one based in the flowsolver
+def _scalarNumber(scalarIndex):
+    return scalarIndex + 1
+
 class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
 
     def __init__(self, mpi_rank, timestepIndexAtConstruction):
@@ -82,10 +93,8 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
 
         #substitute for
         #   self.speciesIndexToFriendlyNamesMap = {1: "Tf", 2: "X", 3: "Xa:Va", 4: "II", 5: "IIa", 6: "Xa:Va:II", 7: "mIIa", 8: "mIIa:ATIII", 9: "IIa:ATIII"}
-        self.speciesIndexToFriendlyNamesMap = ScalarIndexToName
-
         for scalarIndex in range(len(ScalarIndexToName)):
-            self.speciesIndexToFriendlyNamesMap[scalarIndex] = ScalarIndexToName[scalarIndex]
+            self.speciesIndexToFriendlyNamesMap[_scalarNumber(scalarIndex)] = ScalarIndexToName[scalarIndex]
 
         #substitute for 
         #   self.setDiffusionCoefficientForSpecies(1, 10)
@@ -95,7 +104,7 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
             coefficientValue = Generated.DiffusionCoefficients[scalarName]
             scalarIndex = ScalarNameToIndex[scalarName]
             
-            self.setDiffusionCoefficientForSpecies(scalarIndex, coefficientValue)
+            self.setDiffusionCoefficientForSpecies(_scalarNumber(scalarIndex), coefficientValue)
 
 
         #Substitute for:
@@ -119,8 +128,8 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
                 updateIterations.append(currentIteration)
                 currentIteration += 1
 
-            self.addNonlinearSolveStepToSpecies(scalarIndex, solverIterations)
-            self.addNonlinearUpdateStepToSpecies(scalarIndex, updateIterations)
+            self.addNonlinearSolveStepToSpecies(_scalarNumber(scalarIndex), solverIterations)
+            self.addNonlinearUpdateStepToSpecies(_scalarNumber(scalarIndex), updateIterations)
 
         # Reaction initialization:
 
@@ -183,12 +192,12 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
             if(symbolName in ScalarIndexToName):
                 # The concentration of each scalar does change through the course of the simulation, so we 
                 # should use the scalar state dictionary to get the scalar values at this iteration
-                scalarIndex = ScalarNameToIndex[symbolName]
+                scalarNumber = _scalarNumber(ScalarNameToIndex[symbolName])
 
-                if(scalarIndex not in self.scalarStateVectorsDictionary):
-                    raise RuntimeError('Scalar index {} could not be found in scalarStateVectorsDictionary. Contents of dictionary: {}'.format(scalarIndex, self.scalarStateVectorsDictionary.keys()))
+                if(scalarNumber not in self.scalarStateVectorsDictionary):
+                    raise RuntimeError('Scalar number {} could not be found in scalarStateVectorsDictionary. Contents of dictionary: {}'.format(scalarNumber, self.scalarStateVectorsDictionary.keys()))
 
-                value = self.scalarStateVectorsDictionary[scalarIndex]
+                value = self.scalarStateVectorsDictionary[scalarNumber]
                 
             elif(symbolName in Generated.ReactionCoefficients):
                 # The value of these constants does not change through the course of the simulation, so we can just grab the generated value
@@ -212,30 +221,35 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
     
     """
         Throws:
-            KeyError if `scalarIndex` is not in `self.scalarStateVectorsDictionary`
+            KeyError if `scalarNumber` is not in `self.scalarStateVectorsDictionary`
     """
-    def getScalarMatrixShape(self, scalarIndex):
-        if(scalarIndex not in self.scalarStateVectorsDictionary):
-            raise KeyError('Scalar index ' + str(scalarIndex) + ' is not known to this scalar problem specification.')
+    def getScalarMatrixShape(self, scalarNumber):
+        if(scalarNumber not in self.scalarStateVectorsDictionary):
+            raise KeyError('Scalar number ' + str(scalarNumber) + ' is not known to this scalar problem specification.')
 
-        value = self.scalarStateVectorsDictionary[scalarIndex]
+        value = self.scalarStateVectorsDictionary[scalarNumber]
 
         return value.shape
 
 
     """
+        Warning: scalarNumber is 1 based!
         Throws:
-            KeyError: If `speciesIndex` is not defined in this scalar problem specification
+            KeyError: If `scalarNumber` is not defined in this scalar problem specification
+            KeyError: If `scalarNumber` is  < 1 (enforces that this must be 1 based and prevents indexing of -1)
     """
-    def computeScalarLHSorRHSVectorForOneSpecies(self, reactionTermOutput, speciesIndex, computeGradient):
-        if(speciesIndex >= len(ScalarIndexToName)):
+    def computeScalarLHSorRHSVectorForOneSpecies(self, reactionTermOutput, scalarNumber, computeGradient):
+        if(scalarNumber > len(ScalarIndexToName)):
             print('Number of Scalars:', len(ScalarIndexToName))
             print(ScalarIndexToName)
-            raise KeyError('Scalar index ' + str(speciesIndex) + ' is not known to this scalar problem specification.')
-        
-        scalarName = ScalarIndexToName[speciesIndex]
+            raise KeyError('ScalarNumber ' + str(scalarNumber) + ' is not known to this scalar problem specification.')
 
-        print('Scalar to be computed: "', scalarName, '" (index=', speciesIndex, ')', sep ='')
+        if(scalarNumber < 1):
+            raise KeyError('Unexpected scalarNumber {}. Expected a 1 based scalar number.'.format(scalarNumber))
+        
+        scalarName = ScalarIndexToName[scalarNumber - 1]
+
+        print('Scalar to be computed: "', scalarName, '" (scalarNumber=', scalarNumber, ')', sep ='')
 
 
 
@@ -275,7 +289,7 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
             reactionTermOutput[:] = result[:]
         
         else:
-            oldScalarShape = self.getScalarMatrixShape(speciesIndex)
+            oldScalarShape = self.getScalarMatrixShape(scalarNumber)
             print("Note: lambda returned non-array value, returning constant value for all nodes")
             reactionTermOutput[:] = np.ones(oldScalarShape)*result
 
