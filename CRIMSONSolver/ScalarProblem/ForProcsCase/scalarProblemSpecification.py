@@ -90,6 +90,7 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
 
     def __init__(self, mpi_rank, timestepIndexAtConstruction):
         super(ScalarProblemSpecification, self).__init__(mpi_rank, timestepIndexAtConstruction)
+        self.speciesIndexToFriendlyNamesMap = {}
 
         #substitute for
         #   self.speciesIndexToFriendlyNamesMap = {1: "Tf", 2: "X", 3: "Xa:Va", 4: "II", 5: "IIa", 6: "Xa:Va:II", 7: "mIIa", 8: "mIIa:ATIII", 9: "IIa:ATIII"}
