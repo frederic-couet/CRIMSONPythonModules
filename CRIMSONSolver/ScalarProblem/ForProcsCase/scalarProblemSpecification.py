@@ -160,6 +160,7 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
         Throws only on internal error conditions: 
             RuntimeError: If `self._symbols` is out of sync with `ReactionCoefficients` and `ScalarNames`
             RuntimeError: If you or I made a typo in this method and didn't set `value` to anything
+            RuntimeError: if a symbol does not have a state vector associated with it in the flowsolver
 
         Gets an array containing the current state of each scalar, plus the constants.
         Of the form:
@@ -183,6 +184,10 @@ class ScalarProblemSpecification(AbstractRuntimeVectorHandler):
                 # The concentration of each scalar does change through the course of the simulation, so we 
                 # should use the scalar state dictionary to get the scalar values at this iteration
                 scalarIndex = ScalarNameToIndex[symbolName]
+
+                if(scalarIndex not in self.scalarStateVectorsDictionary):
+                    raise RuntimeError('Scalar index {} could not be found in scalarStateVectorsDictionary. Contents of dictionary: {}'.format(scalarIndex, self.scalarStateVectorsDictionary))
+
                 value = self.scalarStateVectorsDictionary[scalarIndex]
                 
             elif(symbolName in Generated.ReactionCoefficients):
