@@ -25,12 +25,26 @@ from CRIMSONSolver.SolverStudies.Timer import Timer
 from CRIMSONSolver.BoundaryConditions import NoSlip, InitialPressure, RCR, ZeroPressure, PrescribedVelocities, \
     DeformableWall, Netlist, PCMRI
 from CRIMSONSolver.Materials import MaterialData
-from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem, ScalarNeumann, ScalarDirichlet, InitialConcentration
+from CRIMSONSolver.ScalarProblem import Scalar, ScalarProblem, ScalarNeumann, ScalarDirichlet, InitialConcentration, NoFlux
 from CRIMSONSolver.ScalarProblem.GenerateScalarProblemSpecification import GenerateSpecification
 
 #DEBUG
 import json
 
+def _getThisScriptFolder():
+    scriptFolder = os.path.dirname(os.path.realpath(__file__))
+    return scriptFolder
+
+def _getParentDirectory(directory):
+    # Pretty much appends /.. at the end of the folder.
+    upOneDir = os.path.join(directory, os.pardir)
+    # this just interprets the .. and cleans up the path
+    normalized = os.path.normpath(upOneDir)
+    return normalized
+
+def _getCRIMSONSolverDirectory():
+    thisScriptFolder = _getThisScriptFolder()
+    return _getParentDirectory(thisScriptFolder)
 
 def _sort_ExtractIndexFromFaceKVP(kvp):
     #print('DEBUG: kvp is ', kvp)
@@ -97,7 +111,12 @@ def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileName
                 #Per sample info
                 faceFileName = '{}.ebc'.format(typeAndVesselName)
                 fluxValue = bcProperties['value']
-                faceLines += 'set_scalar_flux {} {} {}\n'.format(faceFileName, scalarNumber, fluxValue)
+
+                # WARNING: Hokey indentation is deliberate, I don't want extra spacing in the.supre
+                faceLines += \
+'''# Scalar Neumann
+set_scalar_flux {} {} {}
+'''.format(faceFileName, scalarNumber, fluxValue)
             
             boundaryConditionString += faceLines
 
@@ -129,6 +148,26 @@ def _formatScalarBoundaryConditionsString(solidModelData, faceIndicesAndFileName
             boundaryConditionString = 'set_scalar_initial_value {} {}\n'.format(scalarNumber, initialValue)
 
             initialConditionBC = scalarBC
+
+        # Same as Scalar Neumann but all 0 values, intended for walls.
+        elif(isinstance(scalarBC, NoFlux.NoFlux)):
+            #print('DEBUG: detected no flux bc')         
+            bcValidFaceIDs = _getValidFaceIdentifiers(solidModelData, scalarBC)
+            if(len(bcValidFaceIDs) < 1):
+                print('WARNING: no valid face Ids for BC of type', str(type(scalarBC)))
+                continue
+
+            faceLines = ''
+            for faceID in bcValidFaceIDs:
+                (priorityIndex, typeAndVesselName) = faceIndicesAndFileNames[faceID]
+
+                faceFileName = '{}.ebc'.format(typeAndVesselName)
+                faceLines += \
+'''# No Flux
+set_scalar_flux {} {} 0.0
+'''.format(faceFileName, scalarNumber)
+            
+            boundaryConditionString += faceLines
 
         else:
             print("Unexpected scalar boundary condition of type '", str(type(scalarBC)))
@@ -381,6 +420,22 @@ class SolverStudy(object):
 
         if(enableScalar):
             _writeScalarProblemSpecification(solverParameters, scalarProblem, scalars, outputDir)
+
+            # CWD is not very helpful with this:
+            # DEBUG: Current working directory is C:\cscald2\CRIMSON-build\bin
+            # print('DEBUG: Current working directory is', os.getcwd())
+            crimsonSolverPath = _getCRIMSONSolverDirectory()
+            genericScalarProblemSpecificationPath = os.path.join(crimsonSolverPath, 'ScalarProblem/ForProcsCase/scalarProblemSpecification.py')
+            try:
+
+                
+                # this script won't be changed for most scalar simulations, we figure it's best to include it with the solver input data
+                # so that in case a highly technical user wants to modify it, they can.
+                #
+                # scalarProblemSpecification.py is in PythonModules/CrimsonSolver/ScalarProblem/ForProcsCase/
+                shutil.copy2(genericScalarProblemSpecificationPath, outputDir)
+            except Exception as ex:
+                raise RuntimeError('An error occurred while copying scalarProblemSpecification from "{}" to "{}": {}'.format(genericScalarProblemSpecificationPath, outputDir, ex.message))
 
         if solutionStorage is not None:
             if QtGui.QMessageBox.question(None, 'Write solution to the solver output?',
