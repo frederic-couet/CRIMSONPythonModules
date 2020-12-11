@@ -151,25 +151,32 @@ class SolverParameters3D(PropertyStorage):
                     # (e.g., to let the fluids "settle out"), set this to something other than timestep 1.
                     # Note that timesteps are 1-based. This is NOT an iteration.
                     {
-                        "Scalar Start Time": 1,
+                        "Start scalar simulation at timestep": 1,
                         "attributes": {"minimum": 1}
                     },
-
-                    # If you want to stop running the flowsolver after a certain number of timesteps, but continue running
-                    # the scalar problem after that, enable this option and set the timestep to stop on
                     {
-                        "End Solve Flow": False,
-                    },
+                        "End Flow Simulation Early":
+                        [
+                            # If you want to stop running the flowsolver after a certain number of timesteps, but continue running
+                            # the scalar problem after that, enable this option and set the timestep to stop on
+                            #
+                            # The names are a bit redundant because I think it looks up the name of the property only
+                            # based on the innermost name
+                            {
+                                "End Flow Simulation Early Enable": False,
+                            },
 
-                    {
-                        "End Flow Time": 1,
-                        "attributes": {"minimum": 1}
+                            {
+                                "End Flow Simulation at Timestep": 1,
+                                "attributes": {"minimum": 1}
+                            }
+                        ]
                     },
 
                     # Type type of scalar discontinuity capturing, 
                     # 1 0 is the one we usually use.
                     {
-                        "Scalar Discontinuity Capturing": "1 0"
+                        "Scalar Discontinuity Capturing": u"1 0"
                     },
 
 

@@ -85,8 +85,12 @@ class SolverInpData():
 
         if(numberOfScalars > 0):
             cardiovascularModelingGroup['Scalar Influx Coefficient'] = props['Scalar Influx Coefficient']
-            cardiovascularModelingGroup['Scalar Start Time'] = props['Scalar Start Time']
             cardiovascularModelingGroup['Scalar Discontinuity Capturing'] = props['Scalar Discontinuity Capturing']
+            
+            cardiovascularModelingGroup['Scalar Start Time'] = props['Start scalar simulation at timestep']
+            cardiovascularModelingGroup['End Solve Flow'] = props["End Flow Simulation Early Enable"]
+            cardiovascularModelingGroup['End Flow Time'] = props['End Flow Simulation at Timestep']
+
 
         try:
             cardiovascularModelingGroup['Simulate in Purely Zero Dimensions'] = props[

@@ -14,7 +14,7 @@ class CRIMSONSolverSolverSetupManager(object):
     humanReadableName = "CRIMSON Solver"
 
     def __init__(self):
-        self.boundaryConditionSetClasses = {"Boundary condition set": BoundaryConditionSet}
+        self.boundaryConditionSetClasses = {"Fluid Boundary and Initial Conditions": BoundaryConditionSet}
         self.solverParametersClasses = {"Solver parameters 3D": SolverParameters3D}
         self.solverStudyClasses = {"Solver study 3D": SolverStudy}
         self.boundaryConditionClasses = {"Initial pressure": InitialPressure.InitialPressure,
