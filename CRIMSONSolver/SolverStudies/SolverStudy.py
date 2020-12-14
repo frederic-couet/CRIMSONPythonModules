@@ -201,7 +201,7 @@ def _writeScalarProblemSpecification(solverParameters, scalarProblem, scalars, o
 
         scalarSymbols.append(scalarSymbol)
         diffusionCoefficients[scalarSymbol] = scalar.getProperties()['Diffusion coefficient']
-        reactionStrings[scalarSymbol] = scalar.getReactionString()
+        reactionStrings[scalarSymbol] = scalar.getReaction_SingleLine()
 
     specificationFileString = GenerateSpecification(fluidIterationCount, scalarIterations, diffusionCoefficients, scalarSymbols, reactionCoefficients, reactionStrings)
 

@@ -1,4 +1,34 @@
+from __future__ import print_function
 from CRIMSONCore.PropertyStorage import PropertyStorage
+
+"""
+    I don't want to get *too* picky about this, this is meant to catch typos,
+    it's not a guarantee that your reaction will work.
+
+    Will accept:
+        - int
+        - float
+        - bool
+    
+    Will return false always on:
+        - string
+        - set/list/dict
+        - None
+"""
+def isValueNumeric(value):
+    # Special case for string to prevent unexpected conversions
+    if(isinstance(value, str)):
+        return False
+    
+    try:
+        valueFloat = float(value)
+        return True
+    except:
+        return False
+
+def stripNewlines(string):
+    return string.replace('\n', '')
+        
 
 class Scalar(PropertyStorage):
     '''
@@ -36,9 +66,52 @@ class Scalar(PropertyStorage):
     def setScalarSymbol(self, scalarSymbol):
         self._scalarSymbol = scalarSymbol
 
-    # I made a function for this because I want to show a nicer UI in a separate window
+    """
+        This returns the reaction string with any newlines the user inserted. 
+        Note that the python modules will strip out newlines before writing it to the scalarProblemSpecification
+    """
     def getReactionString(self):
         return self._reactionString
     
     def setReactionString(self, reactionString):
-        self._reactionString = reactionString
+        return stripNewlines(reactionString)
+
+    """
+        Reaction equation with newlines stripped out
+    """
+    def getReaction_SingleLine(self):
+        return self._reactionString.replace('\n', '')
+
+    """
+        Note: this is safe in Python 3
+    """
+    def testRunReaction(self, symbols, reactionEquation):
+        reactionEquation_NoNewline = stripNewlines(reactionEquation)
+        if("" == reactionEquation_NoNewline):
+            print('Reaction equation cannot be left blank.')
+            return False
+
+        invalidSymbols = {"#", "'", '"'}
+
+        for invalidSymbol in invalidSymbols:
+            if(invalidSymbol in reactionEquation_NoNewline):
+                print('Reaction equation "', reactionEquation_NoNewline, "' contains an invalid symbol '", invalidSymbol, "'.", sep='')
+                return False
+
+        symbolValue = 2
+        for symbol in symbols:
+            # Assign all the symbols as local variables
+            exec('{}={}'.format(symbol,symbolValue))
+            
+        try:
+            result = eval(reactionEquation_NoNewline)
+
+            if(not isValueNumeric(result)):
+                raise RuntimeError('Value did not evaluate to a numeric result, instead it evaluated to a value of type {}'.format(type(result)))
+
+            print('Reaction equation "', reactionEquation_NoNewline, '" with symbols ', symbols, ' and all symbols set to ', symbolValue, ' evaluated to ', result, sep='')
+            return True
+
+        except Exception as ex:
+            print('Failed to evaluate reaction equation "', reactionEquation_NoNewline, '" with symbols ', symbols, ': ', ex.message, sep='')
+            return False
