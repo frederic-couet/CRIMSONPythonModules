@@ -74,7 +74,7 @@ class Scalar(PropertyStorage):
         return self._reactionString
     
     def setReactionString(self, reactionString):
-        return stripNewlines(reactionString)
+        self._reactionString = reactionString
 
     """
         Reaction equation with newlines stripped out
@@ -95,7 +95,7 @@ class Scalar(PropertyStorage):
 
         for invalidSymbol in invalidSymbols:
             if(invalidSymbol in reactionEquation_NoNewline):
-                print('Reaction equation "', reactionEquation_NoNewline, "' contains an invalid symbol '", invalidSymbol, "'.", sep='')
+                print("Reaction equation '", reactionEquation_NoNewline, "' contains an invalid symbol '", invalidSymbol, "'.", sep='')
                 return False
 
         symbolValue = 2
