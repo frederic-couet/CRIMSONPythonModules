@@ -180,6 +180,18 @@ set_scalar_flux {} {} 0.0
 
     return allBoundaryConditionsString
 
+def _stringIsNoneOrWhitespace(string):
+    if(string is None):
+        return True
+    
+    if(string == ''):
+        return True
+
+    if(string.isspace()):
+        return True
+    
+    return False
+
 def _writeScalarProblemSpecification(solverParameters, scalarProblem, scalars, outputDir):
     if(scalarProblem is None):
         return
@@ -201,7 +213,12 @@ def _writeScalarProblemSpecification(solverParameters, scalarProblem, scalars, o
 
         scalarSymbols.append(scalarSymbol)
         diffusionCoefficients[scalarSymbol] = scalar.getProperties()['Diffusion coefficient']
-        reactionStrings[scalarSymbol] = scalar.getReaction_SingleLine()
+        reactionString = scalar.getReaction_SingleLine()
+
+        if(_stringIsNoneOrWhitespace(reactionString)):
+            print("Warning: Reaction string for scalar with symbol '", scalarSymbol, "' is not set, or entirely whitespace.", sep='')
+
+        reactionStrings[scalarSymbol] = reactionString
 
     specificationFileString = GenerateSpecification(fluidIterationCount, scalarIterations, diffusionCoefficients, scalarSymbols, reactionCoefficients, reactionStrings)
 
@@ -406,9 +423,9 @@ class SolverStudy(object):
         enableScalar = (scalarProblem is not None)
 
         if(enableScalar):
-            print('No scalar problem detected.')
+            print('Scalar simulation enabled.') 
         else:
-            print('Scalar simulation detected.')
+            print('Scalar simulation disabled.')
         
         for scalar in scalars:
             print('Scalar symbol: ', scalar.getScalarSymbol())
