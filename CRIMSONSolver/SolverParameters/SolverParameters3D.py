@@ -47,6 +47,16 @@ class SolverParameters3D(PropertyStorage):
     def getIterations(self):
         return self.Iterations
 
+    """
+        For context, this method is called by the UI to color rows in the parameters editor.
+        
+        Color is applied to all subnodes of a node, so we just have to identify the top level hierarchy parameter
+        name that we are interested in coloring, the color will be applied to all sub-nodes.
+    """
+    def getScalarPropertyNames(self):
+        # I would normally have used a Python set here, but unfortunately it seems that PythonQt does not recognize Python sets.
+        return ["Scalar simulation parameters"]
+
     def _getStepConstructionSection(self):
         simParametersCategory = self.properties[2]
         simParameters = simParametersCategory['Simulation parameters']
