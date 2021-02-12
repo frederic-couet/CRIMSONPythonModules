@@ -14,7 +14,7 @@ class ScalarNeumann(FaceData):
                 "value": 0.0,
                 "attributes": {
                     #superscript four
-                    "suffix": u" mol/mm\u2074)"
+                    "suffix": u" mol/mm\u2074"
                 }
             },
         ]
